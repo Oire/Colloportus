@@ -38,15 +38,23 @@ Run `phpunit` in the projects directory.
 ```php
 use \Oire\Colloportus;
 // By default, the key is 32 bytes in size. To customize the size, pass it as the second parameter
-$key = Colloportus::createKey();
-// To save the key in a storable form, either pass false as the first parameter to the createKey() method, or do:
-$storable = Colloportus::save($key);
+try {
+	$key = Colloportus::createKey();
+	// To save the key in a storable form, either pass false as the first parameter to the createKey() method, or do:
+	$storable = Colloportus::save($key);
+} catch(Exception $e) {
+	// Handle errors
+}
 if (isset($_POST['password'])) {
 	if (!is_string($_POST['password'])) {
 		die("Password must be a string");
 	}
-	// You may lock the password with a storable key. To do this, pass false as the third parameter
-	$storeMe = Colloportus::lock($_POST['password'], $key);
+	try {
+		// You may lock the password with a storable key. To do this, pass false as the third parameter
+		$storeMe = Colloportus::lock($_POST['password'], $key);
+	} catch(Exception $e) {
+		// Handle errors
+	}
 }
 ```
 
@@ -57,8 +65,13 @@ if (isset($_POST['password'])) {
 	if (!is_string($_POST['password'])) {
 		die("Password must be a string");
 	}
-	// You may verify the password with a storable key. To do this, pass false as the fourth parameter
-	if (Colloportus::check($_POST['password'], $storeMe, $key)) {
+	try {
+		// You may verify the password with a storable key. To do this, pass false as the fourth parameter
+		$verified = Colloportus::check($_POST['password'], $storeMe, $key);
+	} catch(Exception $e) {
+		// Handle errors
+	}
+	if ($verified) {
 		// Success!
 	}
 }
@@ -67,8 +80,16 @@ if (isset($_POST['password'])) {
 ### Re-encrypt a hash with a different encryption key
 
 ```php
-$newKey = Colloportus::createKey();
-$newHash = Colloportus::flip($storeMe, $key, $newKey);
+try {
+	$newKey = Colloportus::createKey();
+} catch(Exception $e) {
+	// Handle errors
+}
+try {
+	$newHash = Colloportus::flip($storeMe, $key, $newKey);
+} catch(Exception $e) {
+	// Handle errors
+}
 ```
 
 ## Methods
@@ -92,7 +113,8 @@ We recommend to wrap every call in `try...catch` since Colloportus throws except
 * Custom string processing implementations are removed, `mbstring` is required.
 * Version header check is removed.
 * `encrypt()` and, subsequently, `Lock()` returns URL/filename-safe Base64 data instead of hexits.
-* Code style changed to match Oirë standards
+* All `sha256` instances are changed to `sha384`.
+* Code style changed to match Oirë standards.
 
 ## License
 Copyright © 2017, Andre Polykanine also known as Menelion Elensúlë.  
