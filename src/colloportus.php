@@ -59,9 +59,9 @@ class Colloportus {
 			$key = $rawKey;
 		} else {
 			try {
-				$key = Base64::encode($rawKey);
+				$key = self::save($rawKey);
 			} catch(\Exception $e) {
-				throw new \Exception("CreateKey: Failed to encode key to Base64: ".$e->getMessage());
+				throw new \Exception("CreateKey: Failed to save key to storable form: ".$e->getMessage());
 			}
 		}
 		return $key;
@@ -81,14 +81,23 @@ class Colloportus {
 		if (!function_exists("openssl_encrypt")) {
 			throw new \Exception("OpenSSL encryption not available.");
 		}
+		if (!is_string($plainText)) {
+			throw new \InvalidArgumentException("The plain text must be a string.");
+		}
+		if (empty($plainText)) {
+			throw new \InvalidArgumentException("The plain text must not be empty.");
+		}
 		if (!is_string($key)) {
-			throw new \InvalidArgumentException("The encryption key must be a string.");
+			throw new \InvalidArgumentException("The key must be a string.");
+		}
+		if (empty($key)) {
+			throw new \InvalidArgumentException("The key must not be empty.");
 		}
 		if (!$rawKey) {
 			try {
-				$key = Base64::decode($key);
+				$key = self::load($key);
 			} catch(\Exception $e) {
-				throw new \InvalidArgumentException("Encrypt: Failed to decode key from Base64: ".$e->getMessage());
+				throw new \InvalidArgumentException("Encrypt: Failed to load storable key: ".$e->getMessage());
 			}
 		}
 		$salt = random_bytes(self::KEY_SIZE); // We don’t want to customize these sizes separately
@@ -115,9 +124,9 @@ class Colloportus {
 			return $cipherText;
 		} else {
 			try {
-				$encoded = Base64::encode($cipherText);
+				$encoded = self::save($cipherText);
 			} catch(\Exception $e) {
-				throw new \Exception("Failed to encode cipher text to Base64: ".$e->getMessage());
+				throw new \Exception("Failed to save cipher text: ".$e->getMessage());
 			}
 			return $encoded;
 		}
@@ -137,21 +146,30 @@ class Colloportus {
 		if (!function_exists("openssl_decrypt")) {
 			throw new \Exception("OpenSSL decryption not available.");
 		}
+		if (!is_string($cipherText)) {
+			throw new \InvalidArgumentException("The cipher text must be a string.");
+		}
+		if (empty($cipherText)) {
+			throw new \InvalidArgumentException("The cipher text must not be empty.");
+		}
 		if (!is_string($key)) {
-			throw new \InvalidArgumentException("The encryption key must be a string.");
+			throw new \InvalidArgumentException("The key must be a string.");
+		}
+		if (empty($key)) {
+			throw new \InvalidArgumentException("The key must not be empty.");
 		}
 		if (!$rawKey) {
 			try {
-				$key = Base64::decode($key);
+				$key = self::load($key);
 			} catch(\Exception $e) {
-				throw new \InvalidArgumentException("Decrypt: Failed to decode key from Base64: ".$e->getMessage());
+				throw new \InvalidArgumentException("Decrypt: Failed to load key: ".$e->getMessage());
 			}
 		}
 		if (!$rawBinary) {
 			try {
-				$cipherText = Base64::decode($cipherText);
+				$cipherText = self::load($cipherText);
 			} catch(\Exception $e) {
-				throw new \InvalidArgumentException("Failed to decode cipher text from Base64: ".$e->getMessage());
+				throw new \InvalidArgumentException("Failed to load cipher text: ".$e->getMessage());
 			}
 		}
 		if (mb_strlen($cipherText, "8bit") < self::MINIMUM_CIPHERTEXT_SIZE) {
@@ -217,8 +235,14 @@ class Colloportus {
 		if (!is_string($password)) {
 			throw new \InvalidArgumentException("The password must be a string.");
 		}
+		if (empty($password)) {
+			throw new \InvalidArgumentException("The password must not be empty.");
+		}
 		if (!is_string($key)) {
 			throw new \InvalidArgumentException("The key must be a string.");
+		}
+		if (empty($key)) {
+			throw new \InvalidArgumentException("The key must not be empty");
 		}
 		$hash = password_hash(Base64::encode(hash("sha384", $password, true)), PASSWORD_DEFAULT);
 		if ($hash === false) {
@@ -244,13 +268,24 @@ class Colloportus {
 			throw new \InvalidArgumentException("The password must be a string.");
 			return false;
 		}
+		if (empty($password)) {
+			throw new \InvalidArgumentException("The password must not be empty.");
+			return false;
+		}
 		if (!is_string($cipherText)) {
 			throw new \InvalidArgumentException("The cipher text must be a string.");
+			return false;
+		}
+		if (empty($cipherText)) {
+			throw new \InvalidArgumentException("The cipher text must not be empty.");
 			return false;
 		}
 		if (!is_string($key)) {
 			throw new \InvalidArgumentException("The key must be a string.");
 			return false;
+		}
+		if (empty($key)) {
+			throw new \InvalidArgumentException("The key must not be empty.");
 		}
 		$hash = self::decrypt($cipherText, $key, $rawKey);
 		return password_verify(Base64::encode(hash("sha384", $password, true)), $hash);
@@ -272,11 +307,20 @@ class Colloportus {
 		if (!is_string($cipherText)) {
 			throw new \InvalidArgumentException("The cipher text must be a string.");
 		}
+		if (empty($cipherText)) {
+			throw new \InvalidArgumentException("The cipher text must not be empty.");
+		}
 		if (!is_string($oldKey)) {
 			throw new \InvalidArgumentException("The old key must be a string.");
 		}
+		if (empty($oldKey)) {
+			throw new \InvalidArgumentException("The old key must not be empty.");
+		}
 		if (!is_string($newKey)) {
 			throw new \InvalidArgumentException("The new key must be a string.");
+		}
+		if (empty($newKey)) {
+			throw new \InvalidArgumentException("The new key must not be empty.");
 		}
 		$plainText = self::decrypt($cipherText, $oldKey, $rawOldKey, $rawBinaryOld);
 		return self::encrypt($plainText, $newKey, $rawNewKey, $rawBinaryNew);
@@ -291,7 +335,10 @@ class Colloportus {
 	*/
 	public static function save(string $binary): string {
 		if (!is_string($binary)) {
-			throw new \InvalidArgumentException("Save: The data to be saved must be a string.");
+			throw new \InvalidArgumentException("The data to be saved must be a string.");
+		}
+		if (empty($binary)) {
+			throw new \InvalidArgumentException("The data to be saved must not be empty.");
 		}
 		try {
 			$storable = Base64::encode($binary);
@@ -311,6 +358,9 @@ class Colloportus {
 	public static function load(string $storable): string {
 		if (!is_string($storable)) {
 			throw new \InvalidArgumentException("Load: The data to be loaded must be a string.");
+		}
+		if (empty($storable)) {
+			throw new \InvalidArgumentException("The data to be loaded must not be empty.");
 		}
 		try {
 			$binary = Base64::decode($storable);
