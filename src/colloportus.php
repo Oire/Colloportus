@@ -46,7 +46,7 @@ class Colloportus {
 	/**
 	 * Creates a new random encryption key.
 	 * @param bool $rawBinary If set to true (default), the key will be returned as binary data. If set to false, a base64-encoded key (uses Oire\Base64) is returned
-	 * @param int $keySize Size of the key in bytes. Defaults to a size defined in the corresponding class constant.
+	 * @param int $keySize Size of the key in bytes. Defaults to self::KEY_SIZE, initially 32 bytes.
 	 * @return string Returns a binary string if $rawBinary is set to true, an Oire\Base64-encoded string otherwise
 	*/
 	public static function createKey(bool $rawBinary = true, int $keySize = self::KEY_SIZE): string {
