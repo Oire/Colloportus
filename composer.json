@@ -1,0 +1,36 @@
+{
+	"name":         "oire/colloportus",
+	"description":  "Wraps Bcrypt-SHA2 in Authenticated Encryption. A simplified fork of Paragon Initiatives PasswordLock combined with parts of Defuse PHP-Encryption.",
+	"keywords": [
+		"password",
+		"encryption",
+		"hashing",
+		"security",
+		"single-file"
+	],
+	"license":      "MIT",
+	"type":         "library",
+	"authors": [
+		{
+			"name":     "Andre Polykanine also known as Menelion Elensúlë",
+			"homepage": "https://github.com/Oire",
+			"role":     "Developer"
+		}
+	],
+	"support": {
+		"issues":   "https://github.com/Oire/colloportus/issues",
+		"source":   "https://github.com/Oire/colloporuts"
+	},
+	"autoload": {
+		"files": [
+			"src/colloportus.php"
+		]
+	},
+	"require": {
+		"php": ">= 7.1.2",
+		"oire/base64": ">= 1.1"
+	},
+	"require-dev": {
+		"phpunit/phpunit": "^6"
+	}
+}
