@@ -37,17 +37,18 @@ use \Oire\Base64;
 */
 
 class Colloportus {
-	private const KEY_SIZE = 32; // Default encryption key and salt size in bytes
+	private const KEY_SIZE = 48; // Default key size in bytes
+	private const SALT_SIZE = 32; // Default salt size in bytes
 	private const IV_SIZE = 16; // Default initialization vector size in bytes
 	private const MINIMUM_CIPHERTEXT_SIZE = 96; // Minimum encrypted text size in bytes
-	private const ENCRYPTION_INFO = "OireColloportus|V1|KeyForEncryption";
-	private const AUTHENTICATION_INFO = "OireColloportus|V1|KeyForAuthentication";
+	private const ENCRYPTION_INFO = "OirëColloportus|V1|KeyForEncryption";
+	private const AUTHENTICATION_INFO = "OirëColloportus|V1|KeyForAuthentication";
 
 	/**
 	 * Creates a new random encryption key.
-	 * @param bool $rawBinary If set to true (default), the key will be returned as binary data. If set to false, a base64-encoded key (uses Oire\Base64) is returned
-	 * @param int $keySize Size of the key in bytes. Defaults to self::KEY_SIZE, initially 32 bytes.
-	 * @return string Returns a binary string if $rawBinary is set to true, an Oire\Base64-encoded string otherwise
+	 * @param bool $rawBinary If set to true (default), the key will be returned as binary data. If set to false, a base64-encoded key (uses Oirë Base64) is returned
+	 * @param int $keySize Size of the key in bytes. Defaults to self::KEY_SIZE, initially 48 bytes.
+	 * @return string Returns a binary string if $rawBinary is set to true, an OirëBase64-encoded string otherwise
 	*/
 	public static function createKey(bool $rawBinary = true, int $keySize = self::KEY_SIZE): string {
 		// Sanitizing the key size. We don’t want to throw an exception there, just resetting to the class constant
@@ -71,8 +72,8 @@ class Colloportus {
 	 * Encrypts data with a given key.
 	 * @param string plainText
 	 * @param string $key
-	 * @param bool $rawKey If set to true (default), it is assumed that the key is provided as binary data. If set to false, a base64-encoded key (uses Oire\base64) is accepted
-	 * @param bool $rawBinary If set to true, raw binary data is returned. If set to false (default), a base64-encoded string (uses Oire\base64) is returned
+	 * @param bool $rawKey If set to true (default), it is assumed that the key is provided as binary data. If set to false, a base64-encoded key (uses Oirë Base64) is accepted
+	 * @param bool $rawBinary If set to true, raw binary data is returned. If set to false (default), a base64-encoded string (uses Oirë Base64) is returned
 	 * @return string
 	 * @throws \Exception if openSSL encryption is not available
 	 * @throws \InvalidArgumentException if the key is not a string
@@ -100,7 +101,7 @@ class Colloportus {
 				throw new \InvalidArgumentException("Encrypt: Failed to load storable key: ".$e->getMessage());
 			}
 		}
-		$salt = random_bytes(self::KEY_SIZE); // We don’t want to customize these sizes separately
+		$salt = random_bytes(self::SALT_SIZE);
 		$akey = hash_hkdf("sha384", $key, self::KEY_SIZE, self::AUTHENTICATION_INFO, $salt);
 		if ($akey === false) {
 			throw new \Exception("Encrypt: Failed to derive authentication key.");
@@ -136,8 +137,8 @@ class Colloportus {
 	 * Decrypts data with a given key.
 	 * @param string cipherText
 	 * @param string $key
-	 * @param bool $rawKey If set to true (default), it is assumed that the key is provided as binary data. If set to false, a base64-encoded key (uses Oire\base64) is accepted
-	 * @param bool $rawBinary If set to true, it is assumed that the cipher text is passed as binary data. If set to false (default), a base64-encoded string (uses Oire\base64) is accepted
+	 * @param bool $rawKey If set to true (default), it is assumed that the key is provided as binary data. If set to false, a base64-encoded key (uses Oirë Base64) is accepted
+	 * @param bool $rawBinary If set to true, it is assumed that the cipher text is passed as binary data. If set to false (default), a base64-encoded string (uses Oirë Base64) is accepted
 	 * @return string
 	 * @throws \Exception
 	 * @throws \InvalidArgumentException
@@ -177,12 +178,12 @@ class Colloportus {
 		}
 
 		// Begin parsing: getting the salt
-		$salt = mb_substr($cipherText, 0, self::KEY_SIZE, "8bit");
+		$salt = mb_substr($cipherText, 0, self::SALT_SIZE, "8bit");
 		if ($salt === false) {
 			throw new \Exception("Bad salt given.");
 		}
 		// Getting the initialization vector
-		$iv = mb_substr($cipherText, self::KEY_SIZE, self::IV_SIZE, "8bit");
+		$iv = mb_substr($cipherText, self::SALT_SIZE, self::IV_SIZE, "8bit");
 		if ($iv === false) {
 			throw new \Exception("Bad initialization vector given.");
 		}
@@ -192,7 +193,7 @@ class Colloportus {
 			throw new \Exception("Bad HMAC given.");
 		}
 		// Getting the cipher text itself
-		$encrypted = mb_substr($cipherText, self::KEY_SIZE + self::IV_SIZE, mb_strlen($cipherText, "8bit") - 48 - self::KEY_SIZE - self::IV_SIZE, "8bit");
+		$encrypted = mb_substr($cipherText, self::SALT_SIZE + self::IV_SIZE, mb_strlen($cipherText, "8bit") - 48 - self::SALT_SIZE - self::IV_SIZE, "8bit");
 		if ($encrypted === false) {
 			throw new \Exception("Bad encrypted text given.");
 		}
@@ -221,34 +222,45 @@ class Colloportus {
 	}
 
 	/**
-	 * 1. Hash password using bcrypt-base64-SHA384
+	 * 1. Hash password using bcrypt-OirëBase64-SHA384
 	 * 2. Encrypt-then-MAC the hash
 	 *
 	 * @param string $password The password to hash
 	 * @param string $key The secret key for encryption
-	 * @param bool $rawKey If set to true (default), it is assumed that the key is provided as binary data. If set to false, a base64-encoded key (uses Oire\base64) is accepted
-	 * @return string
+	 * @param bool $rawKey If set to true (default), it is assumed that the key is provided as binary data. If set to false, a base64-encoded key (uses Oirë Base64) is accepted
+	 * @return string Returns the cipher text in Oiré Base64 on success, an empty string on failure
 	 * @throws \Exception
 	 * @throws \InvalidArgumentException
 	*/
 	public static function lock(string $password, string $key, bool $rawKey = true): string {
 		if (!is_string($password)) {
 			throw new \InvalidArgumentException("The password must be a string.");
+			$locked = "";
 		}
 		if (empty($password)) {
 			throw new \InvalidArgumentException("The password must not be empty.");
+			$locked = "";
 		}
 		if (!is_string($key)) {
 			throw new \InvalidArgumentException("The key must be a string.");
+			$locked = "";
 		}
 		if (empty($key)) {
 			throw new \InvalidArgumentException("The key must not be empty");
+			$locked = "";
 		}
 		$hash = password_hash(Base64::encode(hash("sha384", $password, true)), PASSWORD_DEFAULT);
 		if ($hash === false) {
 			throw new \Exception("Lock: Unknown hashing error.");
+			$locked = "";
 		}
-		return self::encrypt($hash, $key, $rawKey);
+		try {
+			$locked = self::encrypt($hash, $key, $rawKey);
+		} catch(\Exception $e) {
+			throw new \Exception("Unable to lock password: ".$e->getMessage());
+			$locked = "";
+		}
+		return $locked;
 	}
 
 	/**
@@ -258,7 +270,7 @@ class Colloportus {
 	 * @param string $password
 	 * @param string $cipherText
 	 * @param string $key
-	 * @param bool $rawKey If set to true (default), it is assumed that the key is provided as binary data. If set to false, a base64-encoded key (uses Oire\base64) is accepted
+	 * @param bool $rawKey If set to true (default), it is assumed that the key is provided as binary data. If set to false, a base64-encoded key (uses Oirë Base64) is accepted
 	 * @return bool
 	 * @throws \Exception
 	 * @throws \InvalidArgumentException
@@ -286,8 +298,14 @@ class Colloportus {
 		}
 		if (empty($key)) {
 			throw new \InvalidArgumentException("The key must not be empty.");
+			return false;
 		}
-		$hash = self::decrypt($cipherText, $key, $rawKey);
+		try {
+			$hash = self::decrypt($cipherText, $key, $rawKey);
+		} catch(\Exception $e) {
+			throw new \Exception("Decryption error during check: ".$e->getMessage());
+			return false;
+		}
 		return password_verify(Base64::encode(hash("sha384", $password, true)), $hash);
 	}
 
@@ -296,76 +314,99 @@ class Colloportus {
 	 * @param string $cipherText
 	 * @param string $oldKey
 	 * @param string $newKey
-	 * @param bool $rawOldKey If set to true (default), it is assumed that the old key is provided as binary data. If set to false, a base64-encoded key (uses Oire\base64) is accepted
-	 * @param bool $rawNewKey If set to true (default), it is assumed that the new key is provided as binary data. If set to false, a base64-encoded key (uses Oire\base64) is accepted
-	 * @param bool $rawBinaryOld If set to true, it is assumed that the old cipher text is passed as binary data. If set to false (default), a base64-encoded string (uses Oire\base64) is accepted
-	 * @param bool $rawBinaryNew If set to true, raw binary data is returned. If set to false (default), a base64-encoded string (uses Oire\base64) is returned
-	 * @return string
+	 * @param bool $rawOldKey If set to true (default), it is assumed that the old key is provided as binary data. If set to false, a base64-encoded key (uses Oirë Base64) is accepted
+	 * @param bool $rawNewKey If set to true (default), it is assumed that the new key is provided as binary data. If set to false, a base64-encoded key (uses Oirë Base64) is accepted
+	 * @param bool $rawBinaryOld If set to true, it is assumed that the old cipher text is passed as binary data. If set to false (default), a base64-encoded string (uses Oirë Base64) is accepted
+	 * @param bool $rawBinaryNew If set to true, raw binary data is returned. If set to false (default), a base64-encoded string (uses Oirë Base64) is returned
+	 * @return string Returns the new cipher text in Oiré Base64 on success, an empty string on failure
 	 * @throws \InvalidArgumentException
 	*/
 	public static function flip(string $cipherText, string $oldKey, string $newKey, bool $rawOldKey = true, bool $rawNewKey = true, bool $rawBinaryOld = false, bool $rawBinaryNew = false): string {
 		if (!is_string($cipherText)) {
 			throw new \InvalidArgumentException("The cipher text must be a string.");
+			$locked = "";
 		}
 		if (empty($cipherText)) {
 			throw new \InvalidArgumentException("The cipher text must not be empty.");
+			$locked = "";
 		}
 		if (!is_string($oldKey)) {
 			throw new \InvalidArgumentException("The old key must be a string.");
+			$locked = "";
 		}
 		if (empty($oldKey)) {
 			throw new \InvalidArgumentException("The old key must not be empty.");
+			$locked = "";
 		}
 		if (!is_string($newKey)) {
 			throw new \InvalidArgumentException("The new key must be a string.");
+			$locked = "";
 		}
 		if (empty($newKey)) {
 			throw new \InvalidArgumentException("The new key must not be empty.");
+			$locked = "";
 		}
-		$plainText = self::decrypt($cipherText, $oldKey, $rawOldKey, $rawBinaryOld);
-		return self::encrypt($plainText, $newKey, $rawNewKey, $rawBinaryNew);
+		try {
+			$plainText = self::decrypt($cipherText, $oldKey, $rawOldKey, $rawBinaryOld);
+		} catch(\Exception $e) {
+			throw new \Exception("Decryption error when flipping keys: ".$e->getMessage());
+			$locked = "";
+		}
+		try {
+			$locked = self::encrypt($plainText, $newKey, $rawNewKey, $rawBinaryNew);
+		} catch(\Exception $e) {
+			throw new \Exception("Encryption error during flipping keys: ".$e->getMessage());
+			$locked = "";
+		}
+		return $locked;
 	}
 
 	/**
 	 * A helper method that allows to transform a raw binary string to a storable representation.
-	 * As elsewhere in Colloportus, Oire\Base64 is used.
+	 * As elsewhere in Colloportus, Oirë Base64 is used.
 	 * @param string $binary The binary string to be encoded into a storable form.
-	 * @return string Returns the encoded string
+	 * @return string Returns the encoded string on success, an empty string on failure
 	 * @throws \InvalidArgumentException
 	*/
 	public static function save(string $binary): string {
 		if (!is_string($binary)) {
 			throw new \InvalidArgumentException("The data to be saved must be a string.");
+			$storable = "";
 		}
 		if (empty($binary)) {
 			throw new \InvalidArgumentException("The data to be saved must not be empty.");
+			$storable = "";
 		}
 		try {
 			$storable = Base64::encode($binary);
 		} catch(\Exception $e) {
-			throw new \Exception("Save: Failed to encode data: ".$e->getMessage());
+			throw new \Exception("Data encoding error during save: ".$e->getMessage());
+			$storable = "";
 		}
 		return $storable;
 	}
 
 	/**
 	 * A helper method that allows to transform a storable string to raw binary representation.
-	 * As elsewhere in Colloportus, Oire\Base64 is used.
+	 * As elsewhere in Colloportus, Oirë Base64 is used.
 	 * @param string $storable The string to be decoded from a storable form.
-	 * @return string Returns raw binary data
+	 * @return string Returns raw binary data on success or an empty string on failure
 	 * @throws \InvalidArgumentException
 	*/
 	public static function load(string $storable): string {
 		if (!is_string($storable)) {
 			throw new \InvalidArgumentException("Load: The data to be loaded must be a string.");
+			$binary = "";
 		}
 		if (empty($storable)) {
 			throw new \InvalidArgumentException("The data to be loaded must not be empty.");
+			$binary = "";
 		}
 		try {
 			$binary = Base64::decode($storable);
 		} catch(\Exception $e) {
-			throw new \Exception("Load: Failed to decode data: ".$e->getMessage());
+			throw new \Exception("Data decoding error during load: ".$e->getMessage());
+			$binary = "";
 		}
 		return $binary;
 	}

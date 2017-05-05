@@ -1,11 +1,11 @@
-# Colloportus
+# Oirë Colloportus
 
 [![Build Status](https://travis-ci.org/Oire/colloportus.svg?branch=master)](https://travis-ci.org/Oire/colloportus)
 [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/Oire/Colloportus/blob/master/LICENSE)
 
-Wraps Bcrypt-SHA384 in Authenticated Encryption. A simplified fork of [Password Lock](https://github.com/paragonie/password_lock) by [Paragon Initiative Enteprises](https://paragonie.com).  
+Wraps Bcrypt-SHA384 in Authenticated Encryption. A simplified fork of [Password Lock](https://github.com/paragonie/password_lock) by [Paragon Initiative Enterprises](https://paragonie.com).  
 Integrates parts of [Defuse PHP Encryption](https://github.com/defuse/php-encryption) for authenticated symmetric-key encryption.  
-Depends on [Oire Base64](https://github.com/Oire/base64) for encoding binary data to a storable format.
+Depends on [Oirë Base64](https://github.com/Oire/base64) for encoding binary data to a storable format.
 
 ## About the Name
 *Colloportus* is a magical spell in the well-known Harry Potter series. It locks doors in a very hard-to-open way, and such a door is completely impossible to open for muggles, i.e., non-wizarding people. I decided to use this as a name for my simplified fork of PasswordLock.  
@@ -21,7 +21,7 @@ Via [Composer](https://getcomposer.org/):
 
 `composer require oire/colloportus`
 
-Or manually. Note that you will need `base64.php` from [Oire Base64](https://github.com/Oire/base64/):
+Or manually. Note that you will need `base64.php` from [Oirë Base64](https://github.com/Oire/base64/):
 
 ```php
 require_once("oire/base64.php");
@@ -37,7 +37,7 @@ Run `phpunit` in the projects directory.
 
 ```php
 use \Oire\Colloportus;
-// By default, the key is 32 bytes in size. To customize the size, pass it as the second parameter
+// By default, the key is 48 bytes in size. To customize the size, pass it as the second parameter
 try {
 	$key = Colloportus::createKey();
 	// To save the key in a storable form, either pass false as the first parameter to the createKey() method, or do:
@@ -114,6 +114,7 @@ We recommend to wrap every call in `try...catch` since Colloportus throws except
 * Version header check is removed.
 * `encrypt()` and, subsequently, `Lock()` returns URL/filename-safe Base64 data instead of hexits.
 * All `sha256` instances are changed to `sha384`.
+* Default key length increased to 48 bytes (384 bits).
 * Code style changed to match Oirë standards.
 
 ## License
