@@ -37,18 +37,14 @@ Run `phpunit` in the projects directory.
 
 ```php
 use \Oire\Colloportus;
-// By default, the key is 48 bytes in size. To customize the size, pass it as the second parameter
 try {
 	$key = Colloportus::createKey();
-	// To save the key in a storable form, either pass false as the first parameter to the createKey() method, or do:
+	// To save the key in a storable form, either pass false as parameter to the createKey() method, or do:
 	$storable = Colloportus::save($key);
 } catch(Exception $e) {
 	// Handle errors
 }
 if (isset($_POST['password'])) {
-	if (!is_string($_POST['password'])) {
-		die("Password must be a string");
-	}
 	try {
 		// You may lock the password with a storable key. To do this, pass false as the third parameter
 		$storeMe = Colloportus::lock($_POST['password'], $key);
@@ -62,9 +58,6 @@ if (isset($_POST['password'])) {
 
 ```php
 if (isset($_POST['password'])) {
-	if (!is_string($_POST['password'])) {
-		die("Password must be a string");
-	}
 	try {
 		// You may verify the password with a storable key. To do this, pass false as the fourth parameter
 		$verified = Colloportus::check($_POST['password'], $storeMe, $key);
@@ -97,7 +90,7 @@ try {
 All Colloportus methods are public and static, so no class instance is required. The methods are documented in the source file, but their description is given below.  
 We recommend to wrap every call in `try...catch` since Colloportus throws exceptions in case of errors.
 
-* `public static function createKey(bool $rawBinary = true, int $keySize = self::KEY_SIZE): string` — Creates a random encryption key. If the first parameter is set to `true`, a raw binary key will be returned. If it is set to `false`, the key will be returned in a storable (i.e., readable) form. The second parameter defines the key size in bytes, by default it is set to 32 (a value defined by the corresponding class constant).
+* `public static function createKey(bool $rawBinary = true): string` — Creates a random encryption key. If the parameter is set to `true`, a raw binary key will be returned. If it is set to `false`, the key will be returned in a storable (i.e., readable) form.
 * `public static function encrypt(string $plainText, string $key, bool $rawKey = true, bool $rawBinary = false): string` — Encrypts given string data with a given key. If `$rawKey` is set to `true`, it is assumed that the key is passed as raw binary data, a storable key is assumed otherwise. If `$rawBinary` is set to true, the encrypted data are returned as binary string, a storable string is returned otherwise.
 * `public static function decrypt(string $cipherText, string $key, bool $rawKey = true, bool $rawBinary = false): string` — Decrypts given cipher text with a given key. If `$rawKey` is set to `true`, it is assumed that the key is passed as raw binary data, a storable key is assumed otherwise. If `$rawBinary` is set to true, it is assumed that the cipher text is passed as raw binary data, a storable string is accepted otherwise.
 * `public static function lock(string $password, string $key, bool $rawKey = true): string` — Locks given password with given key. If `$rawKey` is set to `true`, it is assumed that the key is passed as raw binary data, a storable key is accepted otherwise. Returns a storable string.
@@ -109,12 +102,11 @@ We recommend to wrap every call in `try...catch` since Colloportus throws except
 ## Differences between Password Lock and Colloportus
 
 * All methods needed for encryption/decryption are provided along with the hashing/verifying methods.
-* Back-porting to older PHP versions is removed.
+* Back-porting to older PHP versions is removed, hence PHP 7.1.2 is required (the `hash_hkdf()` method was added in this particular version).
 * Custom string processing implementations are removed, `mbstring` is required.
 * Version header check is removed.
 * `encrypt()` and, subsequently, `Lock()` returns URL/filename-safe Base64 data instead of hexits.
 * All `sha256` instances are changed to `sha384`.
-* Default key length increased to 48 bytes (384 bits).
 * Code style changed to match Oirë standards.
 
 ## License

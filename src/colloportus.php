@@ -37,9 +37,9 @@ use \Oire\Base64;
 */
 
 class Colloportus {
-	private const KEY_SIZE = 48; // Default key size in bytes
-	private const SALT_SIZE = 32; // Default salt size in bytes
-	private const IV_SIZE = 16; // Default initialization vector size in bytes
+	const HASH_FUNCTION = "sha384"; // Hashing function used in Colloportus
+	private const SALT_SIZE = 32; // Salt size in bytes
+	private const IV_SIZE = 16; // Initialization vector size in bytes
 	private const MINIMUM_CIPHERTEXT_SIZE = 96; // Minimum encrypted text size in bytes
 	private const ENCRYPTION_INFO = "OirëColloportus|V1|KeyForEncryption";
 	private const AUTHENTICATION_INFO = "OirëColloportus|V1|KeyForAuthentication";
@@ -47,15 +47,10 @@ class Colloportus {
 	/**
 	 * Creates a new random encryption key.
 	 * @param bool $rawBinary If set to true (default), the key will be returned as binary data. If set to false, a base64-encoded key (uses Oirë Base64) is returned
-	 * @param int $keySize Size of the key in bytes. Defaults to self::KEY_SIZE, initially 48 bytes.
 	 * @return string Returns a binary string if $rawBinary is set to true, an OirëBase64-encoded string otherwise
 	*/
-	public static function createKey(bool $rawBinary = true, int $keySize = self::KEY_SIZE): string {
-		// Sanitizing the key size. We don’t want to throw an exception there, just resetting to the class constant
-		if (empty($keySize) || !is_int($keySize) || $keySize < 0) {
-			$keySize = self::KEY_SIZE;
-		}
-		$rawKey = random_bytes($keySize);
+	public static function createKey(bool $rawBinary = true): string {
+		$rawKey = random_bytes(32); // As per AES specification, 256 bits is maximum for the key
 		if ($rawBinary) {
 			$key = $rawKey;
 		} else {
@@ -102,11 +97,11 @@ class Colloportus {
 			}
 		}
 		$salt = random_bytes(self::SALT_SIZE);
-		$akey = hash_hkdf("sha384", $key, self::KEY_SIZE, self::AUTHENTICATION_INFO, $salt);
+		$akey = hash_hkdf(self::HASH_FUNCTION, $key, 0, self::AUTHENTICATION_INFO, $salt);
 		if ($akey === false) {
 			throw new \Exception("Encrypt: Failed to derive authentication key.");
 		}
-		$ekey = hash_hkdf("sha384", $key, self::KEY_SIZE, self::ENCRYPTION_INFO, $salt);
+		$ekey = hash_hkdf(self::HASH_FUNCTION, $key, 0, self::ENCRYPTION_INFO, $salt);
 		if ($ekey === false) {
 			throw new \Exception("Encrypt: Failed to derive encryption key.");
 		}
@@ -116,7 +111,7 @@ class Colloportus {
 			throw new \Exception("OpenSSL encryption failed.");
 		}
 		$cipherText = $salt . $iv . $encrypted;
-		$hmac       = hash_hmac("sha384", $cipherText, $akey, true);
+		$hmac       = hash_hmac(self::HASH_FUNCTION, $cipherText, $akey, true);
 		if ($hmac === false) {
 			throw new \Exception("Encrypt: Failed to compute HMAC.");
 		}
@@ -198,15 +193,15 @@ class Colloportus {
 			throw new \Exception("Bad encrypted text given.");
 		}
 		// End parsing. Deriving keys
-		$akey = hash_hkdf("sha384", $key, self::KEY_SIZE, self::AUTHENTICATION_INFO, $salt);
+		$akey = hash_hkdf(self::HASH_FUNCTION, $key, 0, self::AUTHENTICATION_INFO, $salt);
 		if ($akey === false) {
 			throw new \Exception("Decrypt: Failed to derive authentication key.");
 		}
-		$ekey = hash_hkdf("sha384", $key, self::KEY_SIZE, self::ENCRYPTION_INFO, $salt);
+		$ekey = hash_hkdf(self::HASH_FUNCTION, $key, 0, self::ENCRYPTION_INFO, $salt);
 		if ($ekey === false) {
 			throw new \Exception("Decrypt: Failed to derive encryption key.");
 		}
-		$message = hash_hmac("sha384", $salt . $iv . $encrypted, $akey, true);
+		$message = hash_hmac(self::HASH_FUNCTION, $salt . $iv . $encrypted, $akey, true);
 		if ($message === false) {
 			throw new \Exception("Decrypt: failed to compute HMAC.");
 		}
@@ -249,7 +244,7 @@ class Colloportus {
 			throw new \InvalidArgumentException("The key must not be empty");
 			$locked = "";
 		}
-		$hash = password_hash(Base64::encode(hash("sha384", $password, true)), PASSWORD_DEFAULT);
+		$hash = password_hash(Base64::encode(hash(self::HASH_FUNCTION, $password, true)), PASSWORD_DEFAULT);
 		if ($hash === false) {
 			throw new \Exception("Lock: Unknown hashing error.");
 			$locked = "";
@@ -306,7 +301,7 @@ class Colloportus {
 			throw new \Exception("Decryption error during check: ".$e->getMessage());
 			return false;
 		}
-		return password_verify(Base64::encode(hash("sha384", $password, true)), $hash);
+		return password_verify(Base64::encode(hash(self::HASH_FUNCTION, $password, true)), $hash);
 	}
 
 	/**

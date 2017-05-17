@@ -51,20 +51,6 @@ public function setUp() {
 		$this->assertFalse(Colloportus::check($this->wrongPassword, $hash, $storableKey, false));
 	}
 
-	public function testLockWithCustomSizeRandomRawKey() {
-		$rawKey = Colloportus::createKey(true, 41);
-		$hash = Colloportus::lock($this->password, $rawKey);
-		$this->assertTrue(Colloportus::check($this->password, $hash, $rawKey));
-		$this->assertFalse(Colloportus::check($this->wrongPassword, $hash, $rawKey));
-	}
-
-	public function testLockWithCustomSizeRandomStorableKey() {
-		$storableKey = Colloportus::createKey(false, 19);
-		$hash = Colloportus::lock($this->password, $storableKey, false);
-		$this->assertTrue(Colloportus::check($this->password, $hash, $storableKey, false));
-		$this->assertFalse(Colloportus::check($this->wrongPassword, $hash, $storableKey, false));
-	}
-
 	public function testFlipWithKnownRawKeys() {
 		$hash = Colloportus::lock($this->password, $this->rawKey);
 		$this->assertTrue(Colloportus::check($this->password, $hash, $this->rawKey));
@@ -125,25 +111,6 @@ public function setUp() {
 		$rawKey = Colloportus::createKey();
 		$storableKey = Colloportus::save($rawKey);
 		$storableNewKey = Colloportus::createKey(false);
-		$rawNewKey = Colloportus::load($storableNewKey);
-		$hash1 = Colloportus::lock($this->password, $rawKey);
-		$this->assertTrue(Colloportus::check($this->password, $hash1, $rawKey));
-		$newHash1 = Colloportus::flip($hash1, $rawKey, $storableNewKey, true, false);
-		$this->assertNotSame($hash1, $newHash1);
-		$this->assertTrue(Colloportus::check($this->password, $newHash1, $storableNewKey, false));
-		$this->assertFalse(Colloportus::check($this->wrongPassword, $newHash1, $storableNewKey, false));
-		$hash2 = Colloportus::lock($this->password, $storableKey, false);
-		$this->assertTrue(Colloportus::check($this->password, $hash2, $storableKey, false));
-		$newHash2 = Colloportus::flip($hash2, $storableKey, $rawNewKey, false, true);
-		$this->assertNotSame($hash2, $newHash2);
-		$this->assertTrue(Colloportus::check($this->password, $newHash2, $rawNewKey));
-		$this->assertFalse(Colloportus::check($this->wrongPassword, $newHash2, $rawNewKey));
-	}
-
-	public function testFlipWithRandomCustomSizeMixedKeys() {
-		$rawKey = Colloportus::createKey(true, 53);
-		$storableKey = Colloportus::save($rawKey);
-		$storableNewKey = Colloportus::createKey(false, 29);
 		$rawNewKey = Colloportus::load($storableNewKey);
 		$hash1 = Colloportus::lock($this->password, $rawKey);
 		$this->assertTrue(Colloportus::check($this->password, $hash1, $rawKey));
