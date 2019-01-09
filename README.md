@@ -117,5 +117,5 @@ All contributions are welcome. Please fork, make a feature branch, hack on the c
 
 ## License
 
-Copyright © 2017-2019, [mailto:ap@oire.me](Andre Polykanine).
+Copyright © 2017-2019, [Andre Polykanine](mailto:ap@oire.me).  
 This software is licensed under an [MIT license](https://github.com/Oire/Colloportus/blob/master/LICENSE).
