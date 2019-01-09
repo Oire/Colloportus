@@ -406,4 +406,3 @@ class Colloportus {
 		return $binary;
 	}
 }
-?>

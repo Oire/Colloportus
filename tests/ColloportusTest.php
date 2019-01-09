@@ -155,4 +155,3 @@ public function setUp() {
 		$this->assertSame($rawKey, $this->rawKey);
 	}
 }
-?>
