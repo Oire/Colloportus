@@ -12,14 +12,15 @@
 	"type":         "library",
 	"authors": [
 		{
-			"name":     "Andre Polykanine also known as Menelion Elensúlë",
-			"homepage": "https://github.com/Oire",
+			"name":     "Andre Polykanine",
+			"email": "ap@oire.me",
+			"homepage": "https://github.com/Menelion",
 			"role":     "Developer"
 		}
 	],
 	"support": {
-		"issues":   "https://github.com/Oire/colloportus/issues",
-		"source":   "https://github.com/Oire/colloporuts"
+		"issues":   "https://github.com/Oire/Colloportus/issues",
+		"source":   "https://github.com/Oire/Colloportus"
 	},
 	"autoload": {
 		"files": [
@@ -33,6 +34,6 @@
 		"ext-openssl": "*"
 	},
 	"require-dev": {
-		"phpunit/phpunit": "^6"
+		"phpunit/phpunit": "^7"
 	}
 }

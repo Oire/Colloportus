@@ -8,6 +8,7 @@ Integrates parts of [Defuse PHP Encryption](https://github.com/defuse/php-encryp
 Depends on [Oirë Base64](https://github.com/Oire/base64) for encoding binary data to a storable format.
 
 ## About the Name
+
 *Colloportus* is a magical spell in the well-known Harry Potter series. It locks doors in a very hard-to-open way, and such a door is completely impossible to open for muggles, i.e., non-wizarding people. I decided to use this as a name for my simplified fork of PasswordLock.  
 The method names are also simplified: `lock`, `check` and `flip` instead of `HashAndEncrypt`, `DecryptAndVerify` and `RotateKey`.
 
@@ -29,7 +30,8 @@ require_once("oire/colloportus.php");
 ```
 
 ## Running Tests
-Run `phpunit` in the projects directory.
+
+Run `./vendor/bin/phpunit` in the projects directory.
 
 ## Usage Examples
 
@@ -109,6 +111,11 @@ We recommend to wrap every call in `try...catch` since Colloportus throws except
 * All `sha256` instances are changed to `sha384`.
 * Code style changed to match Oirë standards.
 
+## Contributing
+
+All contributions are welcome. Please fork, make a feature branch, hack on the code, run tests, push your branch and send a pull-request.
+
 ## License
-Copyright © 2017, Andre Polykanine also known as Menelion Elensúlë.  
-This software is licensed under an MIT license.
+
+Copyright © 2017-2019, [mailto:ap@oire.me](Andre Polykanine).
+This software is licensed under an [MIT license](https://github.com/Oire/Colloportus/blob/master/LICENSE).
