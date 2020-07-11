@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<phpunit bootstrap="autoload.php">
+<phpunit>
 	<testsuites>
-		<testsuite name="colloportus">
+		<testsuite name="Colloportus">
 			<directory>tests</directory>
 		</testsuite>
 	</testsuites>
