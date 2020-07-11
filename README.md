@@ -1,9 +1,9 @@
-# Oirë Colloportus
+# Oirë Colloportus, a Password Hashing and Encryption Library
 
-[![Build Status](https://travis-ci.org/Oire/colloportus.svg?branch=master)](https://travis-ci.org/Oire/colloportus)
+[![Build Status](https://api.travis-ci.com/Oire/Colloportus.svg?branch=master)](https://travis-ci.com/github/Oire/Colloportus)
 [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/Oire/Colloportus/blob/master/LICENSE)
 
-Wraps Bcrypt-SHA384 in Authenticated Encryption. A simplified fork of [Password Lock](https://github.com/paragonie/password_lock) by [Paragon Initiative Enterprises](https://paragonie.com).  
+This library can be used for hashing passwords, as well as for encrypting data that needs to be decrypted afterwards. It wraps Bcrypt-SHA384 in Authenticated Encryption. A simplified fork of [Password Lock](https://github.com/paragonie/password_lock) by [Paragon Initiative Enterprises](https://paragonie.com).  
 Integrates parts of [Defuse PHP Encryption](https://github.com/defuse/php-encryption) for authenticated symmetric-key encryption.  
 Depends on [Oirë Base64](https://github.com/Oire/base64) for encoding binary data to a storable format.
 
@@ -18,15 +18,10 @@ Requires PHP 7.1.2 or later with `mbString` and `openSSL` enabled.
 
 ## Installation
 
-Via [Composer](https://getcomposer.org/):
+Install via [Composer](https://getcomposer.org/):
 
-`composer require oire/colloportus`
-
-Or manually. Note that you will need `base64.php` from [Oirë Base64](https://github.com/Oire/base64/):
-
-```php
-require_once("oire/base64.php");
-require_once("oire/colloportus.php");
+```
+composer require oire/colloportus
 ```
 
 ## Running Tests
@@ -35,62 +30,79 @@ Run `./vendor/bin/phpunit` in the projects directory.
 
 ## Usage Examples
 
-### Hash Password, Encrypt Hash, Authenticate Cipher Text
+### Hash and Encrypt a Password
 
 ```php
-use \Oire\Colloportus;
+use Oire\Colloportus;
+use Oire\Exception\ColloportusException;
+
 try {
-	$key = Colloportus::createKey();
-	// To save the key in a storable form, either pass false as parameter to the createKey() method, or do:
-	$storable = Colloportus::save($key);
-} catch(Exception $e) {
-	// Handle errors
+    $key = Colloportus::createKey();
+    // To save the key in a storable form, either pass false as parameter to the createKey() method, or do:
+    $storable = Colloportus::save($key);
+} catch (ColloportusException $e) {
+    // Handle errors
 }
-if (isset($_POST['password'])) {
-	try {
-		// You may lock the password with a storable key. To do this, pass false as the third parameter
-		$storeMe = Colloportus::lock($_POST['password'], $key);
-	} catch(Exception $e) {
-		// Handle errors
+
+if (!empty($_POST['password'])) {
+    try {
+        // You may lock the password with a storable key. To do this, pass false as the third parameter
+        $storeMe = Colloportus::lock($_POST['password'], $key);
+    } catch (ColloportusException $e) {
+        // Handle errors
+    }
+}
+```
+
+### Decrypt and Verify a Password
+
+```php
+if (!empty($_POST['password'])) {
+    try {
+        // You may verify the password with a storable key. To do this, pass false as the fourth parameter
+        $verified = Colloportus::check($_POST['password'], $storeMe, $key);
+    } catch (ColloportusException $e) {
+        // Handle errors
+    }
+
+    if ($verified) {
+        // Success!
 	}
 }
 ```
 
-### Verify MAC, Decrypt Ciphertext, Verify Password
+### Encrypt Some Data that Need to Be Decrypted Afterwards
+**Note!** Do not use this for passwords, they must not be back-decryptable. If you want to store a password, you must hash it (see above).
 
 ```php
-if (isset($_POST['password'])) {
-	try {
-		// You may verify the password with a storable key. To do this, pass false as the fourth parameter
-		$verified = Colloportus::check($_POST['password'], $storeMe, $key);
-	} catch(Exception $e) {
-		// Handle errors
-	}
-	if ($verified) {
-		// Success!
-	}
-}
+$data = 'Mischief managed!';
+// To use a storable key, pass false as the third parameter
+$encrypted = Colloportus::encrypt($data, $key);
+$decrypted = Colloportus::decrypt($encrypted, $key);
+var_export($decrypted === $data);
+// => true
 ```
 
-### Re-encrypt a hash with a different encryption key
+### Re-encrypt Data with a Different Encryption Key
 
 ```php
 try {
-	$newKey = Colloportus::createKey();
-} catch(Exception $e) {
-	// Handle errors
+    $newKey = Colloportus::createKey();
+} catch (ColloportusException $e) {
+    // Handle errors
 }
+
 try {
-	$newHash = Colloportus::flip($storeMe, $key, $newKey);
-} catch(Exception $e) {
-	// Handle errors
+    $newHash = Colloportus::flip($storeMe, $key, $newKey);
+} catch (ColloportusException $e) {
+    // Handle errors
 }
 ```
 
 ## Methods
 
-All Colloportus methods are public and static, so no class instance is required. The methods are documented in the source file, but their description is given below.  
-We recommend to wrap every call in `try...catch` since Colloportus throws exceptions in case of errors.
+All Colloportus methods are public and static, so no class instance is required. The methods are documented in the code comments, but their description is given below for rerefence.  
+We recommend to wrap every call in `try...catch` since Colloportus throws `ColloportusException` in case of errors.
 
 * `public static function createKey(bool $rawBinary = true): string` — Creates a random encryption key. If the parameter is set to `true`, a raw binary key will be returned. If it is set to `false`, the key will be returned in a storable (i.e., readable) form.
 * `public static function encrypt(string $plainText, string $key, bool $rawKey = true, bool $rawBinary = false): string` — Encrypts given string data with a given key. If `$rawKey` is set to `true`, it is assumed that the key is passed as raw binary data, a storable key is assumed otherwise. If `$rawBinary` is set to true, the encrypted data are returned as binary string, a storable string is returned otherwise.
@@ -98,6 +110,7 @@ We recommend to wrap every call in `try...catch` since Colloportus throws except
 * `public static function lock(string $password, string $key, bool $rawKey = true): string` — Locks given password with given key. If `$rawKey` is set to `true`, it is assumed that the key is passed as raw binary data, a storable key is accepted otherwise. Returns a storable string.
 * `public static function check(string $password, string $cipherText, string $key, bool $rawKey = true): bool` — Verifies the given password against given storable cipher text. If `$rawKey` is set to `true`, it is assumed that the key is passed as binary data, a storable string is accepted otherwise. Returns `true` on success or `false` on failure.
 * `public static function flip(string $cipherText, string $oldKey, string $newKey, bool $rawOldKey = true, bool $rawNewKey = true, bool $rawBinaryOld = false, bool $rawBinaryNew = false): string` — Allows to re-encrypt the password hash with a different key (for example, if the old key is compromised and the hashes are not). If `$rawOldKey` and/or `$rawNewKey` are set to `true`, it is assumed that the old and/or new keys are in raw binary form, storable strings are accepted otherwise. If `$rawBinaryOld` and/or `$rawBinaryNew` are set to `true`, it is assumed that the old cipher text is in raw binary form and/or the new cipher text will be returned in raw binary form.
+* `public static function keyIsValid(string $key, bool $rawKey = true): bool` — Checks if a given key is valid. As the keys are random, basically checks only the length of the key. If `$rawKey` is set to false, assumes that the key is given in the storable format.
 * `public static function save(string $binary): string` — Allows to save a raw binary string (for example, the newly created key) as a storable string.
 * `public static function load(string $storable): string` — Allows to transform a storable string in raw binary data. 
 
@@ -117,5 +130,5 @@ All contributions are welcome. Please fork, make a feature branch, hack on the c
 
 ## License
 
-Copyright © 2017-2019, [Andre Polykanine](mailto:ap@oire.me).  
-This software is licensed under an [MIT license](https://github.com/Oire/Colloportus/blob/master/LICENSE).
+Copyright © 2017-2020, Andre Polykanine also known as Menelion Elensúlë, [The Magical Kingdom of Oirë](https://github.com/Oire/).  
+This software is licensed under an MIT license.
