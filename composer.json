@@ -9,7 +9,8 @@
         }
     ],
     "require": {
-        "php": ">=7.1.2"
+        "php": ">=7.1.2",
+        "oire/base64": "^1"
     },
     "require-dev": {
         "friendsofphp/php-cs-fixer": "^2.16",

@@ -1,157 +1,229 @@
 <?php
+namespace Oire\Tests;
+
 use Oire\Colloportus;
 use PHPUnit\Framework\TestCase;
 
-/**
- @requires php 7.1.2
-*/
+class ColloportusTest extends TestCase
+{
+    private const CORRECT_PASSWORD = '4024Alohomora02*X%cZ/R&D';
+    private const WRONG_PASSWORD = '4024Alohomora02*X%cZ/r&d';
+    private const STORABLE_KEY = 'AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8';
+    private const NEW_STORABLE_KEY = 'Hx4dHBsaGRgXFhUUExIREA8ODQwLCgkIBwYFBAMCAQA';
+    private const DECRYPTABLE_DATA = 'Mischief managed!';
 
-class ColloportusTest extends TestCase {
-	protected $password;
-	protected $wrongPassword;
-	protected $rawKey;
-	protected $storableKey;
-	protected $rawNewKey;
-	protected $storableNewKey;
-	protected $decryptableData;
+    /** @var string */
+    private $rawKey;
 
-public function setUp() {
-	$this->password="4024Alohomora02*X%cZ/R&";
-	$this->wrongPassword = "4024Alohomora02*X%cZ/r&"; // Note the small r towards the end
-	$this->rawKey = hex2bin("000102030405060708090A0B0C0D0E0F101112131415161718191A1B1C1D1E1F");
-	$this->storableKey = "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8";
-	$this->rawNewKey = hex2bin("1F1E1D1C1B1A191817161514131211100F0E0D0C0B0A09080706050403020100");
-	$this->storableNewKey = "Hx4dHBsaGRgXFhUUExIREA8ODQwLCgkIBwYFBAMCAQA";
-	$this->decryptableData = "Mischief managed!";
-}
+    /** @var string */
+    private $newRawKey;
 
-	public function testLockWithKnownRawKey() {
-		$hash = Colloportus::lock($this->password, $this->rawKey);
-		$wrongHash = Colloportus::lock($this->wrongPassword, $this->rawKey);
-		$this->assertTrue(Colloportus::check($this->password, $hash, $this->rawKey));
-	}
+    protected function setUp(): void
+    {
+        $this->rawKey = hex2bin('000102030405060708090A0B0C0D0E0F101112131415161718191A1B1C1D1E1F');
+        $this->newRawKey = hex2bin('1F1E1D1C1B1A191817161514131211100F0E0D0C0B0A09080706050403020100');
+    }
 
-	public function testLockWithKnownStorableKey() {
-		$hash = Colloportus::lock($this->password, $this->storableKey, false);
-		$this->assertTrue(Colloportus::check($this->password, $hash, $this->storableKey, false));
-		$this->assertFalse(Colloportus::check($this->wrongPassword, $hash, $this->storableKey, false));
-	}
+    public function testLockWithKnownRawKey(): void
+    {
+        $hash = Colloportus::lock(self::CORRECT_PASSWORD, $this->rawKey);
 
-	public function testLockWithRandomRawKey() {
-		$rawKey = Colloportus::createKey();
-		$hash = Colloportus::lock($this->password, $rawKey);
-		$this->assertTrue(Colloportus::check($this->password, $hash, $rawKey));
-		$this->assertFalse(Colloportus::check($this->wrongPassword, $hash, $rawKey));
-	}
+        self::assertTrue(Colloportus::check(self::CORRECT_PASSWORD, $hash, $this->rawKey));
+        self::assertFalse(Colloportus::check(self::WRONG_PASSWORD, $hash, $this->rawKey));
+    }
 
-	public function testLockWithRandomStorableKey() {
-		$storableKey = Colloportus::createKey(false);
-		$hash = Colloportus::lock($this->password, $storableKey, false);
-		$this->assertTrue(Colloportus::check($this->password, $hash, $storableKey, false));
-		$this->assertFalse(Colloportus::check($this->wrongPassword, $hash, $storableKey, false));
-	}
+    public function testLockWithKnownStorableKey(): void
+    {
+        $hash = Colloportus::lock(self::CORRECT_PASSWORD, self::STORABLE_KEY, false);
 
-	public function testFlipWithKnownRawKeys() {
-		$hash = Colloportus::lock($this->password, $this->rawKey);
-		$this->assertTrue(Colloportus::check($this->password, $hash, $this->rawKey));
-		$newHash = Colloportus::flip($hash, $this->rawKey, $this->rawNewKey);
-		$this->assertNotSame($hash, $newHash);
-		$this->assertTrue(Colloportus::check($this->password, $newHash, $this->rawNewKey));
-		$this->assertFalse(Colloportus::check($this->wrongPassword, $newHash, $this->rawNewKey));
-	}
+        self::assertTrue(Colloportus::check(self::CORRECT_PASSWORD, $hash, self::STORABLE_KEY, false));
+        self::assertFalse(Colloportus::check(self::WRONG_PASSWORD, $hash, self::STORABLE_KEY, false));
+    }
 
-	public function testFlipWithKnownStorableKeys() {
-		$hash = Colloportus::lock($this->password, $this->storableKey, false);
-		$this->assertTrue(Colloportus::check($this->password, $hash, $this->storableKey, false));
-		$newHash = Colloportus::flip($hash, $this->storableKey, $this->storableNewKey, false, false);
-		$this->assertNotSame($hash, $newHash);
-		$this->assertTrue(Colloportus::check($this->password, $newHash, $this->storableNewKey, false));
-		$this->assertFalse(Colloportus::check($this->wrongPassword, $newHash, $this->storableNewKey, false));
-	}
+    public function testLockWithRandomRawKey(): void
+    {
+        $rawKey = Colloportus::createKey();
+        $hash = Colloportus::lock(self::CORRECT_PASSWORD, $rawKey);
 
-	public function testFlipWithRandomRawKeys() {
-		$rawKey = Colloportus::createKey();
-		$rawNewKey = Colloportus::createKey();
-		$hash = Colloportus::lock($this->password, $rawKey);
-		$this->assertTrue(Colloportus::check($this->password, $hash, $rawKey));
-		$this->assertFalse(Colloportus::check($this->wrongPassword, $hash, $rawKey));
-		$newHash = Colloportus::flip($hash, $rawKey, $rawNewKey);
-		$this->assertNotSame($hash, $newHash);
-		$this->assertTrue(Colloportus::check($this->password, $newHash, $rawNewKey));
-		$this->assertFalse(Colloportus::check($this->wrongPassword, $newHash, $rawNewKey));
-	}
+        self::assertTrue(Colloportus::check(self::CORRECT_PASSWORD, $hash, $rawKey));
+        self::assertFalse(Colloportus::check(self::WRONG_PASSWORD, $hash, $rawKey));
+    }
 
-	public function testFlipWithRandomStorableKeys() {
-		$storableKey = Colloportus::createKey(false);
-		$storableNewKey = Colloportus::createKey(false);
-		$hash = Colloportus::lock($this->password, $storableKey, false);
-		$this->assertTrue(Colloportus::check($this->password, $hash, $storableKey, false));
-		$newHash = Colloportus::flip($hash, $storableKey, $storableNewKey, false, false);
-		$this->assertNotSame($hash, $newHash);
-		$this->assertTrue(Colloportus::check($this->password, $newHash, $storableNewKey, false));
-		$this->assertFalse(Colloportus::check($this->wrongPassword, $newHash, $storableNewKey, false));
-	}
+    public function testLockWithRandomStorableKey(): void
+    {
+        $storableKey = Colloportus::createKey(false);
+        $hash = Colloportus::lock(self::CORRECT_PASSWORD, $storableKey, false);
 
-	public function testFlipWithKnownMixedKeys() {
-		$hash1 = Colloportus::lock($this->password, $this->rawKey);
-		$this->assertTrue(Colloportus::check($this->password, $hash1, $this->rawKey));
-		$newHash1 = Colloportus::flip($hash1, $this->rawKey, $this->storableNewKey, true, false);
-		$this->assertNotSame($hash1, $newHash1);
-		$this->assertTrue(Colloportus::check($this->password, $newHash1, $this->storableNewKey, false));
-		$this->assertFalse(Colloportus::check($this->wrongPassword, $newHash1, $this->storableNewKey, false));
-		$hash2 = Colloportus::lock($this->password, $this->storableKey, false);
-		$this->assertTrue(Colloportus::check($this->password, $hash2, $this->storableKey, false));
-		$newHash2 = Colloportus::flip($hash2, $this->storableKey, $this->rawNewKey, false, true);
-		$this->assertNotSame($hash2, $newHash2);
-		$this->assertTrue(Colloportus::check($this->password, $newHash2, $this->rawNewKey));
-		$this->assertFalse(Colloportus::check($this->wrongPassword, $newHash2, $this->rawNewKey));
-	}
+        self::assertTrue(Colloportus::check(self::CORRECT_PASSWORD, $hash, $storableKey, false));
+        self::assertFalse(Colloportus::check(self::WRONG_PASSWORD, $hash, $storableKey, false));
+    }
 
-	public function testFlipWithRandomMixedKeys() {
-		$rawKey = Colloportus::createKey();
-		$storableKey = Colloportus::save($rawKey);
-		$storableNewKey = Colloportus::createKey(false);
-		$rawNewKey = Colloportus::load($storableNewKey);
-		$hash1 = Colloportus::lock($this->password, $rawKey);
-		$this->assertTrue(Colloportus::check($this->password, $hash1, $rawKey));
-		$newHash1 = Colloportus::flip($hash1, $rawKey, $storableNewKey, true, false);
-		$this->assertNotSame($hash1, $newHash1);
-		$this->assertTrue(Colloportus::check($this->password, $newHash1, $storableNewKey, false));
-		$this->assertFalse(Colloportus::check($this->wrongPassword, $newHash1, $storableNewKey, false));
-		$hash2 = Colloportus::lock($this->password, $storableKey, false);
-		$this->assertTrue(Colloportus::check($this->password, $hash2, $storableKey, false));
-		$newHash2 = Colloportus::flip($hash2, $storableKey, $rawNewKey, false, true);
-		$this->assertNotSame($hash2, $newHash2);
-		$this->assertTrue(Colloportus::check($this->password, $newHash2, $rawNewKey));
-		$this->assertFalse(Colloportus::check($this->wrongPassword, $newHash2, $rawNewKey));
-	}
+    public function testFlipWithKnownRawKeys(): void
+    {
+        $hash = Colloportus::lock(self::CORRECT_PASSWORD, $this->rawKey);
 
-	public function testEncryptDecryptWithKnownRawKey() {
-		$encrypted = Colloportus::encrypt($this->decryptableData, $this->rawKey);
-		$this->assertSame(Colloportus::decrypt($encrypted, $this->rawKey), $this->decryptableData);
-	}
+        self::assertTrue(Colloportus::check(self::CORRECT_PASSWORD, $hash, $this->rawKey));
 
-	public function testEncryptDecryptWithKnownStorableKey() {
-		$encrypted = Colloportus::encrypt($this->decryptableData, $this->storableKey, false);
-		$this->assertSame(Colloportus::decrypt($encrypted, $this->storableKey, false), $this->decryptableData);
-	}
+        $newHash = Colloportus::flip($hash, $this->rawKey, $this->newRawKey);
 
-	public function testEncryptDecryptWithRandomRawKey() {
-		$rawKey = Colloportus::createKey();
-		$encrypted = Colloportus::encrypt($this->decryptableData, $rawKey);
-		$this->assertSame(Colloportus::decrypt($encrypted, $rawKey), $this->decryptableData);
-	}
+        self::assertNotSame($hash, $newHash);
+        self::assertTrue(Colloportus::check(self::CORRECT_PASSWORD, $newHash, $this->newRawKey));
+        self::assertFalse(Colloportus::check(self::WRONG_PASSWORD, $newHash, $this->newRawKey));
+    }
 
-	public function testEncryptDecryptWithRandomStorableKey() {
-		$storableKey = Colloportus::createKey(false);
-		$encrypted = Colloportus::encrypt($this->decryptableData, $storableKey, false);
-		$this->assertSame(Colloportus::decrypt($encrypted, $storableKey, false), $this->decryptableData);
-	}
+    public function testFlipWithKnownStorableKeys(): void
+    {
+        $hash = Colloportus::lock(self::CORRECT_PASSWORD, self::STORABLE_KEY, false);
 
-	public function testSaveLoad() {
-		$storableKey = Colloportus::save($this->rawKey);
-		$this->assertSame($storableKey, $this->storableKey);
-		$rawKey = Colloportus::load($this->storableKey);
-		$this->assertSame($rawKey, $this->rawKey);
-	}
+        self::assertTrue(Colloportus::check(self::CORRECT_PASSWORD, $hash, self::STORABLE_KEY, false));
+
+        $newHash = Colloportus::flip($hash, self::STORABLE_KEY, self::NEW_STORABLE_KEY, false, false);
+
+        self::assertNotSame($hash, $newHash);
+        self::assertTrue(Colloportus::check(self::CORRECT_PASSWORD, $newHash, self::NEW_STORABLE_KEY, false));
+        self::assertFalse(Colloportus::check(self::WRONG_PASSWORD, $newHash, self::NEW_STORABLE_KEY, false));
+    }
+
+    public function testFlipWithRandomRawKeys(): void
+    {
+        $rawKey = Colloportus::createKey();
+        $newRawKey = Colloportus::createKey();
+        $hash = Colloportus::lock(self::CORRECT_PASSWORD, $rawKey);
+
+        self::assertTrue(Colloportus::check(self::CORRECT_PASSWORD, $hash, $rawKey));
+        self::assertFalse(Colloportus::check(self::WRONG_PASSWORD, $hash, $rawKey));
+
+        $newHash = Colloportus::flip($hash, $rawKey, $newRawKey);
+
+        self::assertNotSame($hash, $newHash);
+        self::assertTrue(Colloportus::check(self::CORRECT_PASSWORD, $newHash, $newRawKey));
+        self::assertFalse(Colloportus::check(self::WRONG_PASSWORD, $newHash, $newRawKey));
+    }
+
+    public function testFlipWithRandomStorableKeys(): void
+    {
+        $storableKey = Colloportus::createKey(false);
+        $newStorableKey = Colloportus::createKey(false);
+        $hash = Colloportus::lock(self::CORRECT_PASSWORD, $storableKey, false);
+
+        self::assertTrue(Colloportus::check(self::CORRECT_PASSWORD, $hash, $storableKey, false));
+
+        $newHash = Colloportus::flip($hash, $storableKey, $newStorableKey, false, false);
+
+        self::assertNotSame($hash, $newHash);
+        self::assertTrue(Colloportus::check(self::CORRECT_PASSWORD, $newHash, $newStorableKey, false));
+        self::assertFalse(Colloportus::check(self::WRONG_PASSWORD, $newHash, $newStorableKey, false));
+    }
+
+    public function testFlipWithKnownOldRawAndNewStorableKeys(): void
+    {
+        $hash = Colloportus::lock(self::CORRECT_PASSWORD, $this->rawKey);
+
+        self::assertTrue(Colloportus::check(self::CORRECT_PASSWORD, $hash, $this->rawKey));
+        $newHash = Colloportus::flip($hash, $this->rawKey, self::NEW_STORABLE_KEY, true, false);
+
+        self::assertNotSame($hash, $newHash);
+        self::assertTrue(Colloportus::check(self::CORRECT_PASSWORD, $newHash, self::NEW_STORABLE_KEY, false));
+        self::assertFalse(Colloportus::check(self::WRONG_PASSWORD, $newHash, self::NEW_STORABLE_KEY, false));
+    }
+
+    public function testFlipWithKnownOldStorableAndNewRawKeys(): void
+    {
+        $hash = Colloportus::lock(self::CORRECT_PASSWORD, self::STORABLE_KEY, false);
+
+        self::assertTrue(Colloportus::check(self::CORRECT_PASSWORD, $hash, self::STORABLE_KEY, false));
+
+        $newHash = Colloportus::flip($hash, self::STORABLE_KEY, $this->newRawKey, false, true);
+
+        self::assertNotSame($hash, $newHash);
+        self::assertTrue(Colloportus::check(self::CORRECT_PASSWORD, $newHash, $this->newRawKey));
+        self::assertFalse(Colloportus::check(self::WRONG_PASSWORD, $newHash, $this->newRawKey));
+    }
+
+    public function testFlipWithRandomOldRawAndNewStorableKeys(): void
+    {
+        $rawKey = Colloportus::createKey();
+        $newStorableKey = Colloportus::createKey(false);
+
+        $hash = Colloportus::lock(self::CORRECT_PASSWORD, $rawKey);
+
+        self::assertTrue(Colloportus::check(self::CORRECT_PASSWORD, $hash, $rawKey));
+        self::assertFalse(Colloportus::check(self::WRONG_PASSWORD, $hash, $rawKey));
+
+        $newHash = Colloportus::flip($hash, $rawKey, $newStorableKey, true, false);
+
+        self::assertNotSame($hash, $newHash);
+        self::assertTrue(Colloportus::check(self::CORRECT_PASSWORD, $newHash, $newStorableKey, false));
+        self::assertFalse(Colloportus::check(self::WRONG_PASSWORD, $newHash, $newStorableKey, false));
+    }
+
+    public function testFlipWithRandomOldStorableAndNewRawKeys(): void
+    {
+        $storableKey = Colloportus::createKey(false);
+        $newRawKey = Colloportus::createKey();
+
+        $hash = Colloportus::lock(self::CORRECT_PASSWORD, $storableKey, false);
+
+        self::assertTrue(Colloportus::check(self::CORRECT_PASSWORD, $hash, $storableKey, false));
+        self::assertFalse(Colloportus::check(self::WRONG_PASSWORD, $hash, $storableKey, false));
+
+        $newHash = Colloportus::flip($hash, $storableKey, $newRawKey, false, true);
+
+        self::assertNotSame($hash, $newHash);
+        self::assertTrue(Colloportus::check(self::CORRECT_PASSWORD, $newHash, $newRawKey));
+        self::assertFalse(Colloportus::check(self::WRONG_PASSWORD, $newHash, $newRawKey));
+    }
+
+    public function testEncryptAndDecryptWithKnownRawKey(): void
+    {
+        $encrypted = Colloportus::encrypt(self::DECRYPTABLE_DATA, $this->rawKey);
+
+        self::assertSame(self::DECRYPTABLE_DATA, Colloportus::decrypt($encrypted, $this->rawKey));
+    }
+
+    public function testEncryptAndDecryptWithKnownStorableKey(): void
+    {
+        $encrypted = Colloportus::encrypt(self::DECRYPTABLE_DATA, self::STORABLE_KEY, false);
+
+        self::assertSame(self::DECRYPTABLE_DATA, Colloportus::decrypt($encrypted, self::STORABLE_KEY, false));
+    }
+
+    public function testEncryptAndDecryptWithRandomRawKey(): void
+    {
+        $rawKey = Colloportus::createKey();
+        $encrypted = Colloportus::encrypt(self::DECRYPTABLE_DATA, $rawKey);
+
+        self::assertSame(self::DECRYPTABLE_DATA, Colloportus::decrypt($encrypted, $rawKey));
+    }
+
+    public function testEncryptAndDecryptWithRandomStorableKey(): void
+    {
+        $storableKey = Colloportus::createKey(false);
+        $encrypted = Colloportus::encrypt(self::DECRYPTABLE_DATA, $storableKey, false);
+
+        self::assertSame(self::DECRYPTABLE_DATA, Colloportus::decrypt($encrypted, $storableKey, false));
+    }
+
+    public function testValidateKey(): void
+    {
+        $invalidRawKey = random_bytes(29);
+        $invalidStorableKey = Colloportus::save(random_bytes(37));
+
+        self::assertTrue(Colloportus::keyIsValid($this->rawKey));
+        self::assertTrue(Colloportus::keyIsValid(self::STORABLE_KEY, false));
+        self::assertFalse(Colloportus::keyIsValid(self::STORABLE_KEY));
+        self::assertFalse(Colloportus::keyIsValid($invalidRawKey));
+        self::assertFalse(Colloportus::keyIsValid($invalidStorableKey, false));
+    }
+
+    public function testSaveAndLoad(): void
+    {
+        $storableKey = Colloportus::save($this->rawKey);
+
+        self::assertSame($storableKey, self::STORABLE_KEY);
+
+        $rawKey = Colloportus::load(self::STORABLE_KEY);
+
+        self::assertSame($rawKey, $this->rawKey);
+    }
 }
