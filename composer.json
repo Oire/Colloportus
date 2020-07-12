@@ -1,6 +1,6 @@
 {
     "name": "oire/colloportus",
-    "description": "Wraps Bcrypt-SHA2 in Authenticated Encryption. A simplified fork of Paragon Initiatives PasswordLock combined with parts of Defuse PHP-Encryption.",
+    "description": "Password hashing and encryption library.",
     "type": "library",
     "repositories": [
         {
@@ -14,7 +14,7 @@
     },
     "require-dev": {
         "friendsofphp/php-cs-fixer": "^2.16",
-        "phpunit/phpunit": "^7",
+        "phpunit/phpunit": "^9",
         "oire/php-code-style": "dev-master"
     },
     "license": "MIT",
@@ -44,8 +44,8 @@
         "sort-packages": true
     },
     "scripts": {
-        "tests": "vendor/bin/phpunit",
-        "coding-style": "vendor/bin/php-cs-fixer fix --dry-run --diff --config=.php_cs.dist",
+        "tests": "./vendor/bin/phpunit",
+        "coding-style": "./vendor/bin/php-cs-fixer fix --dry-run --diff --config=.php_cs.dist",
         "clear": "rm -rf vendor/"
     }
 }

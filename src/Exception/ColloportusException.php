@@ -3,6 +3,7 @@ declare(strict_types=1);
 namespace Oire\Exception;
 
 use RuntimeException;
+use Throwable;
 
 /**
  * Oirë Colloportus
@@ -32,6 +33,12 @@ use RuntimeException;
 
 class ColloportusException extends RuntimeException
 {
+
+    public function __construct(string $message, ?Throwable $previous)
+    {
+        parent::__construct($message, 0, $previous);
+    }
+
     public static function invalidKey(): self
     {
         return new static('Invalid key given.');

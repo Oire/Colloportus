@@ -41,32 +41,23 @@ class Colloportus
     private const MINIMUM_CIPHER_TEXT_SIZE = 96;
     private const ENCRYPTION_INFO = 'OirëColloportus|V1|KeyForEncryption';
     private const AUTHENTICATION_INFO = 'OirëColloportus|V1|KeyForAuthentication';
-    private const FILE = './test.txt';
 
     /**
      * Create a new random encryption key.
-     * @param  bool   $rawBinary If set to true (default), the key will be returned as binary data. If set to false, a base64-encoded key (uses Oirë Base64) is returned
-     * @return string Returns a binary string if $rawBinary is set to true, an OirëBase64-encoded string otherwise
+     * @return string Returns an Oirë-Base64-encoded key
      */
-    public static function createKey(bool $rawBinary = true): string
+    public static function createKey(): string
     {
-        $rawKey = random_bytes(self::KEY_SIZE);
-
-        if ($rawBinary) {
-            return $rawKey;
-        }
-
-        return self::save($rawKey);
+        return Base64::encode(random_bytes(self::KEY_SIZE));
     }
 
     /**
      * Encrypt data with a given key.
      * @param string plainText
-     * @param  bool        $rawKey    If set to true (default), it is assumed that the key is provided as binary data. If set to false, an Oirë-base64-encoded key is accepted
-     * @param  bool        $rawBinary If set to true, raw binary data is returned. If set to false (default), an Oirë-base64-encoded string is returned
+     * @return string Returns the encrypted data
      * @throws PortusError
      */
-    public static function encrypt(string $plainText, string $key, bool $rawKey = true, bool $rawBinary = false): string
+    public static function encrypt(string $plainText, string $key): string
     {
         if (!function_exists('openssl_encrypt')) {
             throw new PortusError('OpenSSL encryption not available.');
@@ -76,16 +67,14 @@ class Colloportus
             return '';
         }
 
-        if (!self::keyIsValid($key, $rawKey)) {
+        if (!self::keyIsValid($key)) {
             throw PortusError::invalidKey();
         }
 
-        if (!$rawKey) {
-            try {
-                $key = self::load($key);
-            } catch (PortusError $e) {
-                throw new PortusError(sprintf('Encrypt: Failed to load storable key: %s.', $e->getMessage()));
-            }
+        try {
+            $key = Base64::decode($key);
+        } catch (Base64Exception $e) {
+            throw new PortusError(sprintf('Encrypt: Failed to decode key: %s.', $e->getMessage()), $e);
         }
 
         $salt = random_bytes(self::SALT_SIZE);
@@ -117,21 +106,17 @@ class Colloportus
 
         $cipherText = $cipherText . $hmac;
 
-        if ($rawBinary) {
-            return $cipherText;
-        }
-
-        return self::save($cipherText);
+        return Base64::encode($cipherText);
     }
 
     /**
      * Decrypt data with a given key.
      * @param string cipherText
-     * @param  bool        $rawKey    If set to true (default), it is assumed that the key is provided as binary data. If set to false, a base64-encoded key (uses Oirë Base64) is accepted
-     * @param  bool        $rawBinary If set to true, it is assumed that the cipher text is passed as binary data. If set to false (default), an Oirë-base64-encoded string is accepted
+     * @param string $key The key used for data decryption
+     * @return string the decrypted plain text
      * @throws PortusError
      */
-    public static function decrypt(string $cipherText, string $key, bool $rawKey = true, bool $rawBinary = false): string
+    public static function decrypt(string $cipherText, string $key): string
     {
         if (!function_exists('openssl_decrypt')) {
             throw new PortusError('OpenSSL decryption not available.');
@@ -141,24 +126,20 @@ class Colloportus
             return '';
         }
 
-        if (!self::keyIsValid($key, $rawKey)) {
+        if (!self::keyIsValid($key)) {
             throw PortusError::invalidKey();
         }
 
-        if (!$rawKey) {
-            try {
-                $key = self::load($key);
-            } catch (PortusError $e) {
-                throw new PortusError(sprintf('Failed to load key: %s.', $e->getMessage()), 0, $e);
-            }
+        try {
+            $key = Base64::decode($key);
+        } catch (Base64Exception $e) {
+            throw new PortusError(sprintf('Failed to decode key: %s.', $e->getMessage()), $e);
         }
 
-        if (!$rawBinary) {
-            try {
-                $cipherText = self::load($cipherText);
-            } catch (PortusError $e) {
-                throw new PortusError(sprintf('Failed to load cipher text: %s.', $e->getMessage()), 0, $e);
-            }
+        try {
+            $cipherText = Base64::decode($cipherText);
+        } catch (Base64Exception $e) {
+            throw new PortusError(sprintf('Failed to decode cipher text: %s.', $e->getMessage()), $e);
         }
 
         if (mb_strlen($cipherText, '8bit') < self::MINIMUM_CIPHER_TEXT_SIZE) {
@@ -225,17 +206,16 @@ class Colloportus
      *
      * @param  string      $password The password to hash
      * @param  string      $key      The secret key for encryption
-     * @param  bool        $rawKey   If set to true (default), it is assumed that the key is provided as binary data. If set to false, an Oirë-base64-encoded key is accepted
      * @throws PortusError
-     * @return string      Cipher text in Oirë base64
+     * @return string Returns Oirë-base64-encoded encrypted result
      */
-    public static function lock(string $password, string $key, bool $rawKey = true): string
+    public static function lock(string $password, string $key): string
     {
         if (empty($password)) {
             return '';
         }
 
-        if (!self::keyIsValid($key, $rawKey)) {
+        if (!self::keyIsValid($key)) {
             throw PortusError::invalidKey();
         }
 
@@ -246,9 +226,9 @@ class Colloportus
         }
 
         try {
-            return self::encrypt($hash, $key, $rawKey);
+            return self::encrypt($hash, $key);
         } catch (PortusError $e) {
-            throw new PortusError(sprintf('Unable to lock password: %s.', $e->getMessage()), 0, $e);
+            throw new PortusError(sprintf('Unable to lock password: %s.', $e->getMessage()), $e);
         }
     }
 
@@ -258,12 +238,12 @@ class Colloportus
      * @param  string      $password   The password to check
      * @param  string      $cipherText The hash to match against
      * @param  string      $key        The secret key for encryption
-     * @param  bool        $rawKey     If set to true (default), it is assumed that the key is provided as binary data. If set to false, an Oirë-base64-encoded key is accepted
+     * @return bool Returns true if the password is valid, false otherwise
      * @throws PortusError
      */
-    public static function check(string $password, string $cipherText, string $key, bool $rawKey = true): bool
+    public static function check(string $password, string $cipherText, string $key): bool
     {
-        if (!self::keyIsValid($key, $rawKey)) {
+        if (!self::keyIsValid($key)) {
             throw PortusError::invalidKey();
         }
 
@@ -272,9 +252,9 @@ class Colloportus
         }
 
         try {
-            $hash = self::decrypt($cipherText, $key, $rawKey);
+            $hash = self::decrypt($cipherText, $key);
         } catch (PortusError $e) {
-            throw new PortusError(sprintf('Decryption error: %s.', $e->getMessage()), 0, $e);
+            throw new PortusError(sprintf('Decryption error: %s.', $e->getMessage()), $e);
         }
 
         return password_verify(Base64::encode(hash(self::HASH_FUNCTION, $password, true)), $hash);
@@ -282,73 +262,48 @@ class Colloportus
 
     /**
      * Change encryption key (for instance, if the old one is compromised).
-     * @param  bool        $rawOldKey    If set to true (default), it is assumed that the old key is provided as binary data. If set to false, an Oirë-base64-encoded key is accepted
-     * @param  bool        $rawNewKey    If set to true (default), it is assumed that the new key is provided as binary data. If set to false, an Oirë-base64-encoded key is accepted
-     * @param  bool        $rawBinaryOld If set to true, it is assumed that the old cipher text is passed as binary data. If set to false (default), an Oirë-base64-encoded string is accepted
-     * @param  bool        $rawBinaryNew If set to true, raw binary data is returned. If set to false (default), an Oirë-base64-encoded string is returned
+     * @param string $cipherText The encrypted data
+     * @param string $oldKey The key the data was encrypted before
+     * @param string $newKey The key for re-encrypting the data
+     * @return string Returns the re-encrypted data
      * @throws PortusError
      */
-    public static function flip(string $cipherText, string $oldKey, string $newKey, bool $rawOldKey = true, bool $rawNewKey = true, bool $rawBinaryOld = false, bool $rawBinaryNew = false): string
+    public static function flip(string $cipherText, string $oldKey, string $newKey): string
     {
-        if (!self::keyIsValid($oldKey, $rawOldKey)) {
+        if (!self::keyIsValid($oldKey)) {
             throw PortusError::invalidKey();
         }
 
-        if (!self::keyIsValid($newKey, $rawNewKey)) {
+        if (!self::keyIsValid($newKey)) {
             throw PortusError::invalidKey();
         }
 
         try {
-            $plainText = self::decrypt($cipherText, $oldKey, $rawOldKey, $rawBinaryOld);
+            $plainText = self::decrypt($cipherText, $oldKey);
         } catch (PortusError $e) {
-            throw new PortusError(sprintf('Decryption failed: %s.', $e->getMessage()), 0, $e);
+            throw new PortusError(sprintf('Decryption failed: %s.', $e->getMessage()), $e);
         }
 
         try {
-            return self::encrypt($plainText, $newKey, $rawNewKey, $rawBinaryNew);
+            return self::encrypt($plainText, $newKey);
         } catch (PortusError $e) {
-            throw new PortusError(sprintf('Encryption failed: %s.', $e->getMessage()), 0, $e);
+            throw new PortusError(sprintf('Encryption failed: %s.', $e->getMessage()), $e);
         }
     }
 
     /**
      * Check if the provided encryption key is valid. Does not match the key against anything, just basically checks its length.
      * @param string $key    the key to be validated
-     * @param bool   $rawKey If set to true (default), assumes that the key is given in raw binary form. If set to false, an Oirë-base64-encoded key is accepted
+     * @return bool Returns true if the key is valid, false otherwise
      */
-    public static function keyIsValid(string $key, bool $rawKey = true): bool
+    public static function keyIsValid(string $key): bool
     {
-        if (!$rawKey) {
-            try {
-                $key = self::load($key);
-            } catch (PortusError $e) {
-                throw new PortusError(sprintf('Failed to load key: %s.', $e->getMessage()), 0, $e);
-            }
+        try {
+            $key = Base64::decode($key);
+        } catch (PortusError $e) {
+            throw new PortusError(sprintf('Failed to decode key: %s.', $e->getMessage()), $e);
         }
 
         return mb_strlen($key, '8bit') === self::KEY_SIZE;
-    }
-
-    /**
-     * Transform a raw binary string to a storable representation.
-     * @param string $binary the binary string to be encoded into a storable form
-     */
-    public static function save(string $binary): string
-    {
-        return Base64::encode($binary);
-    }
-
-    /**
-     * Transform a storable string to raw binary representation.
-     * @param  string      $storable the string to be decoded from a storable form
-     * @throws PortusError
-     */
-    public static function load(string $storable): string
-    {
-        try {
-            return Base64::decode($storable);
-        } catch (Base64Exception $e) {
-            throw new PortusError(sprintf('Transform to binary failed.', $e->getMessage()), 0, $e);
-        }
     }
 }

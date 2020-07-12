@@ -3,6 +3,7 @@
 [![Build Status](https://api.travis-ci.com/Oire/Colloportus.svg?branch=master)](https://travis-ci.com/github/Oire/Colloportus)
 [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/Oire/Colloportus/blob/master/LICENSE)
 
+Welcome to Colloportus, a password hashing and data encryption library!  
 This library can be used for hashing passwords, as well as for encrypting data that needs to be decrypted afterwards. It wraps Bcrypt-SHA384 in Authenticated Encryption. A simplified fork of [Password Lock](https://github.com/paragonie/password_lock) by [Paragon Initiative Enterprises](https://paragonie.com).  
 Integrates parts of [Defuse PHP Encryption](https://github.com/defuse/php-encryption) for authenticated symmetric-key encryption.  
 Depends on [Oirë Base64](https://github.com/Oire/base64) for encoding binary data to a storable format.
@@ -27,6 +28,11 @@ composer require oire/colloportus
 ## Running Tests
 
 Run `./vendor/bin/phpunit` in the projects directory.
+
+## Compatibility with Earlier Versions of PHP
+If you want a version compatible with PHP 7.1.2, please install [version 1](https://github.com/Oire/Colloportus/tree/v1) instead:
+
+
 
 ## Usage Examples
 
