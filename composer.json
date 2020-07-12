@@ -42,10 +42,5 @@
     },
     "config": {
         "sort-packages": true
-    },
-    "scripts": {
-        "tests": "./vendor/bin/phpunit",
-        "coding-style": "./vendor/bin/php-cs-fixer fix --dry-run --diff --config=.php_cs.dist",
-        "clear": "rm -rf vendor/"
     }
 }

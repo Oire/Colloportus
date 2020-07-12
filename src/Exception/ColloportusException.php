@@ -33,7 +33,6 @@ use Throwable;
 
 class ColloportusException extends RuntimeException
 {
-
     public function __construct(string $message, ?Throwable $previous)
     {
         parent::__construct($message, 0, $previous);

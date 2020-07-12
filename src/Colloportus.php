@@ -54,8 +54,8 @@ class Colloportus
     /**
      * Encrypt data with a given key.
      * @param string plainText
-     * @return string Returns the encrypted data
      * @throws PortusError
+     * @return string      Returns the encrypted data
      */
     public static function encrypt(string $plainText, string $key): string
     {
@@ -112,9 +112,9 @@ class Colloportus
     /**
      * Decrypt data with a given key.
      * @param string cipherText
-     * @param string $key The key used for data decryption
-     * @return string the decrypted plain text
+     * @param  string      $key The key used for data decryption
      * @throws PortusError
+     * @return string      the decrypted plain text
      */
     public static function decrypt(string $cipherText, string $key): string
     {
@@ -207,7 +207,7 @@ class Colloportus
      * @param  string      $password The password to hash
      * @param  string      $key      The secret key for encryption
      * @throws PortusError
-     * @return string Returns Oirë-base64-encoded encrypted result
+     * @return string      Returns Oirë-base64-encoded encrypted result
      */
     public static function lock(string $password, string $key): string
     {
@@ -238,8 +238,8 @@ class Colloportus
      * @param  string      $password   The password to check
      * @param  string      $cipherText The hash to match against
      * @param  string      $key        The secret key for encryption
-     * @return bool Returns true if the password is valid, false otherwise
      * @throws PortusError
+     * @return bool        Returns true if the password is valid, false otherwise
      */
     public static function check(string $password, string $cipherText, string $key): bool
     {
@@ -262,11 +262,11 @@ class Colloportus
 
     /**
      * Change encryption key (for instance, if the old one is compromised).
-     * @param string $cipherText The encrypted data
-     * @param string $oldKey The key the data was encrypted before
-     * @param string $newKey The key for re-encrypting the data
-     * @return string Returns the re-encrypted data
+     * @param  string      $cipherText The encrypted data
+     * @param  string      $oldKey     The key the data was encrypted before
+     * @param  string      $newKey     The key for re-encrypting the data
      * @throws PortusError
+     * @return string      Returns the re-encrypted data
      */
     public static function flip(string $cipherText, string $oldKey, string $newKey): string
     {
@@ -293,8 +293,8 @@ class Colloportus
 
     /**
      * Check if the provided encryption key is valid. Does not match the key against anything, just basically checks its length.
-     * @param string $key    the key to be validated
-     * @return bool Returns true if the key is valid, false otherwise
+     * @param  string $key the key to be validated
+     * @return bool   Returns true if the key is valid, false otherwise
      */
     public static function keyIsValid(string $key): bool
     {
