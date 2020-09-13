@@ -2,9 +2,6 @@
 declare(strict_types=1);
 namespace Oire\Colloportus\Exception;
 
-use RuntimeException;
-use Throwable;
-
 /**
  * Oirë Colloportus
  * Wraps Bcrypt-SHA2 in Authenticated Encryption. A simplified fork of Paragon Initiatives PasswordLock combined with parts of Defuse PHP-encryption.
@@ -30,25 +27,6 @@ use Throwable;
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  *  SOFTWARE.
  */
-class ColloportusException extends RuntimeException
+class EncryptionException extends ColloportusException
 {
-    public function __construct(string $message, ?Throwable $previous)
-    {
-        parent::__construct($message, 0, $previous);
-    }
-
-    public static function hmacFailed(): self
-    {
-        return new static('Failed to compute HMAC.');
-    }
-
-    public static function authenticationKeyFailed(): self
-    {
-        return new static('Failed to derive authentication key.');
-    }
-
-    public static function encryptionKeyFailed(): self
-    {
-        return new static('Failed to derive encryption key.');
-    }
 }

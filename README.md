@@ -41,8 +41,8 @@ composer require "oire/colloportus ^1"
 ### Hash and Encrypt a Password
 
 ```php
-use Oire\Colloportus;
-use Oire\Exception\ColloportusException;
+use Oire\Colloportus\Colloportus;
+use Oire\Colloportus\Exception\ColloportusException;
 
 // Actually you need to create a key beforehand and save it somewhere, for example, in a .env file
 $key = Colloportus::createKey();
@@ -95,6 +95,14 @@ try {
 }
 ```
 
+## On Error Handling
+Colloportus has various exceptions that are thrown when something fails:
+* A generic `ColloportusException` which is always safe to catch. All other exceptions inherit from it;
+* `EncryptionException` is thrown whenever data encryption fails;
+* `DecryptionException` is thrown whenever data decryption fails;
+* `PasswordException` is thrown whenever a password-related call fails;
+* `KeyException` is thrown when any key-related call fails.
+
 ## Methods
 
 All Colloportus methods are public and static, so no class instance is required. The methods are documented in the code comments, but their description is given below for rerefence.  
@@ -106,7 +114,7 @@ We recommend to wrap every call in `try...catch` since Colloportus throws `Collo
 * `public static function lock(string $password, string $key): string` — Locks given password with a given key. Returns a storable result.
 * `public static function check(string $password, string $cipherText, string $key): bool` — Verifies the given password against a given cipher text. Returns `true` on success or `false` on failure.
 * `public static function flip(string $cipherText, string $oldKey, string $newKey): string` — Allows to re-encrypt any encrypted data with a different key (for example, if the old key is compromised and the hashes are not). Returns the data encrypted with the new key.
-* `public static function keyIsValid(string $key): bool` — Checks if a given key is valid. As the keys are random, basically checks only the length of the key. Returns `true` if the key is valid, `false` otherwise.
+* `public static function keyIsValid(string $key): bool` — Checks if a given key is valid. As the keys are random, basically checks only the length of the key and whether it can be decoded from Oirë implementation of Base64. Returns `true` if the key is valid, `false` otherwise.
 
 ## Differences between Password Lock and Colloportus
 

@@ -1,9 +1,13 @@
 <?php
 declare(strict_types=1);
-namespace Oire;
+namespace Oire\Colloportus;
 
-use Oire\Exception\Base64Exception;
-use Oire\Exception\ColloportusException as PortusError;
+use Oire\Base64\Base64;
+use Oire\Base64\Exception\Base64Exception;
+use Oire\Colloportus\Exception\DecryptionException;
+use Oire\Colloportus\Exception\EncryptionException;
+use Oire\Colloportus\Exception\KeyException;
+use Oire\Colloportus\Exception\PasswordException;
 
 /**
  * Oirë Colloportus
@@ -53,14 +57,15 @@ class Colloportus
 
     /**
      * Encrypt data with a given key.
-     * @param string plainText
-     * @throws PortusError
-     * @return string      Returns the encrypted data
+     * @param  string              $plainText The data to be encrypted
+     * @param  string              $key       The key generated with `createKey()`
+     * @throws EncryptionException
+     * @return string              Returns the encrypted data
      */
     public static function encrypt(string $plainText, string $key): string
     {
         if (!function_exists('openssl_encrypt')) {
-            throw new PortusError('OpenSSL encryption not available.');
+            throw new EncryptionException('OpenSSL encryption not available.');
         }
 
         if (empty($plainText)) {
@@ -68,40 +73,40 @@ class Colloportus
         }
 
         if (!self::keyIsValid($key)) {
-            throw PortusError::invalidKey();
+            throw KeyException::invalidKey();
         }
 
         try {
             $key = Base64::decode($key);
         } catch (Base64Exception $e) {
-            throw new PortusError(sprintf('Encrypt: Failed to decode key: %s.', $e->getMessage()), $e);
+            throw new EncryptionException(sprintf('Failed to decode key: %s.', $e->getMessage()), $e);
         }
 
         $salt = random_bytes(self::SALT_SIZE);
         $authenticationKey = hash_hkdf(self::HASH_FUNCTION, $key, 0, self::AUTHENTICATION_INFO, $salt);
 
         if ($authenticationKey === false) {
-            throw PortusError::authenticationKeyFailed();
+            throw EncryptionException::authenticationKeyFailed();
         }
 
         $encryptionKey = hash_hkdf(self::HASH_FUNCTION, $key, 0, self::ENCRYPTION_INFO, $salt);
 
         if ($encryptionKey === false) {
-            throw PortusError::encryptionKeyFailed();
+            throw EncryptionException::encryptionKeyFailed();
         }
 
         $iv = random_bytes(self::IV_SIZE);
         $encrypted = openssl_encrypt($plainText, self::ENCRYPTION_ALGORITHM, $encryptionKey, OPENSSL_RAW_DATA, $iv);
 
         if ($encrypted === false) {
-            throw new PortusError('OpenSSL encryption failed.');
+            throw new EncryptionException('OpenSSL encryption failed.');
         }
 
         $cipherText = $salt . $iv . $encrypted;
         $hmac       = hash_hmac(self::HASH_FUNCTION, $cipherText, $authenticationKey, true);
 
         if ($hmac === false) {
-            throw PortusError::hmacFailed();
+            throw EncryptionException::hmacFailed();
         }
 
         $cipherText = $cipherText . $hmac;
@@ -111,15 +116,14 @@ class Colloportus
 
     /**
      * Decrypt data with a given key.
-     * @param string cipherText
-     * @param  string      $key The key used for data decryption
-     * @throws PortusError
-     * @return string      the decrypted plain text
+     * @param  string              $key The key the data was encrypted with, previously generated with `createKey()`
+     * @throws DecryptionException
+     * @return string              the decrypted plain text
      */
     public static function decrypt(string $cipherText, string $key): string
     {
         if (!function_exists('openssl_decrypt')) {
-            throw new PortusError('OpenSSL decryption not available.');
+            throw new DecryptionException('OpenSSL decryption not available.');
         }
 
         if (empty($cipherText)) {
@@ -127,75 +131,75 @@ class Colloportus
         }
 
         if (!self::keyIsValid($key)) {
-            throw PortusError::invalidKey();
+            throw KeyException::invalidKey();
         }
 
         try {
             $key = Base64::decode($key);
         } catch (Base64Exception $e) {
-            throw new PortusError(sprintf('Failed to decode key: %s.', $e->getMessage()), $e);
+            throw new DecryptionException(sprintf('Failed to decode key: %s.', $e->getMessage()), $e);
         }
 
         try {
             $cipherText = Base64::decode($cipherText);
         } catch (Base64Exception $e) {
-            throw new PortusError(sprintf('Failed to decode cipher text: %s.', $e->getMessage()), $e);
+            throw new DecryptionException(sprintf('Failed to decode cipher text: %s.', $e->getMessage()), $e);
         }
 
         if (mb_strlen($cipherText, '8bit') < self::MINIMUM_CIPHER_TEXT_SIZE) {
-            throw new PortusError('Given cipher text is of incorrect length.');
+            throw new DecryptionException('Given cipher text is of incorrect length.');
         }
 
         $salt = mb_substr($cipherText, 0, self::SALT_SIZE, '8bit');
 
         if ($salt === false) {
-            throw new PortusError('Invalid salt given.');
+            throw new DecryptionException('Invalid salt given.');
         }
 
         $iv = mb_substr($cipherText, self::SALT_SIZE, self::IV_SIZE, '8bit');
 
         if ($iv === false) {
-            throw new PortusError('Invalid initialization vector given.');
+            throw new DecryptionException('Invalid initialization vector given.');
         }
 
         $hmac = mb_substr($cipherText, -48, null, '8bit');
 
         if ($hmac === false) {
-            throw PortusError::hmacFailed();
+            throw DecryptionException::hmacFailed();
         }
 
         $encrypted = mb_substr($cipherText, self::SALT_SIZE + self::IV_SIZE, mb_strlen($cipherText, '8bit') - 48 - self::SALT_SIZE - self::IV_SIZE, '8bit');
 
         if ($encrypted === false) {
-            throw new PortusError('Invalid encrypted text given.');
+            throw new DecryptionException('Invalid encrypted text given.');
         }
 
         $authenticationKey = hash_hkdf(self::HASH_FUNCTION, $key, 0, self::AUTHENTICATION_INFO, $salt);
 
         if ($authenticationKey === false) {
-            throw PortusError::authenticationKeyFailed();
+            throw DecryptionException::authenticationKeyFailed();
         }
 
         $encryptionKey = hash_hkdf(self::HASH_FUNCTION, $key, 0, self::ENCRYPTION_INFO, $salt);
 
         if ($encryptionKey === false) {
-            throw PortusError::encryptionKeyFailed();
+            throw DecryptionException::encryptionKeyFailed();
         }
 
         $message = hash_hmac(self::HASH_FUNCTION, $salt . $iv . $encrypted, $authenticationKey, true);
 
         if ($message === false) {
-            throw PortusError::hmacFailed();
+            throw DecryptionException::hmacFailed();
         }
 
         if (!hash_equals($hmac, $message)) {
-            throw new PortusError('Integrity check failed.');
+            throw new DecryptionException('Integrity check failed.');
         }
 
         $plainText = openssl_decrypt($encrypted, self::ENCRYPTION_ALGORITHM, $encryptionKey, OPENSSL_RAW_DATA, $iv);
 
         if ($plainText === false) {
-            throw new PortusError('OpenSSL decryption failed.');
+            throw new DecryptionException('OpenSSL decryption failed.');
         }
 
         return $plainText;
@@ -204,10 +208,10 @@ class Colloportus
     /**
      * Hash password, encrypt-then-MAC the hash
      *
-     * @param  string      $password The password to hash
-     * @param  string      $key      The secret key for encryption
-     * @throws PortusError
-     * @return string      Returns Oirë-base64-encoded encrypted result
+     * @param  string            $password The password to hash
+     * @param  string            $key      The secret key for encryption, generated with `createKey()`
+     * @throws PasswordException
+     * @return string            Returns Oirë-base64-encoded encrypted result
      */
     public static function lock(string $password, string $key): string
     {
@@ -216,35 +220,35 @@ class Colloportus
         }
 
         if (!self::keyIsValid($key)) {
-            throw PortusError::invalidKey();
+            throw KeyException::invalidKey();
         }
 
         $hash = password_hash(Base64::encode(hash(self::HASH_FUNCTION, $password, true)), PASSWORD_DEFAULT);
 
         if ($hash === false) {
-            throw new PortusError('Failed to hash the password.');
+            throw new PasswordException('Failed to hash the password.');
         }
 
         try {
             return self::encrypt($hash, $key);
-        } catch (PortusError $e) {
-            throw new PortusError(sprintf('Unable to lock password: %s.', $e->getMessage()), $e);
+        } catch (EncryptionException $e) {
+            throw new PasswordException(sprintf('Encryption failed: %s.', $e->getMessage()), $e);
         }
     }
 
     /**
      * VerifyHMAC-then-Decrypt the ciphertext to get the hash, then verify that the hash matches the password
      *
-     * @param  string      $password   The password to check
-     * @param  string      $cipherText The hash to match against
-     * @param  string      $key        The secret key for encryption
-     * @throws PortusError
-     * @return bool        Returns true if the password is valid, false otherwise
+     * @param  string            $password   The password to check
+     * @param  string            $cipherText The hash to match against
+     * @param  string            $key        The secret key for encryption, previously generated with `createKey()`
+     * @throws PasswordException
+     * @return bool              Returns true if the password is valid, false otherwise
      */
     public static function check(string $password, string $cipherText, string $key): bool
     {
         if (!self::keyIsValid($key)) {
-            throw PortusError::invalidKey();
+            throw PasswordException::invalidKey();
         }
 
         if (empty($password)) {
@@ -253,8 +257,8 @@ class Colloportus
 
         try {
             $hash = self::decrypt($cipherText, $key);
-        } catch (PortusError $e) {
-            throw new PortusError(sprintf('Decryption error: %s.', $e->getMessage()), $e);
+        } catch (DecryptionException $e) {
+            throw new PasswordException(sprintf('Decryption failed: %s.', $e->getMessage()), $e);
         }
 
         return password_verify(Base64::encode(hash(self::HASH_FUNCTION, $password, true)), $hash);
@@ -262,37 +266,37 @@ class Colloportus
 
     /**
      * Change encryption key (for instance, if the old one is compromised).
-     * @param  string      $cipherText The encrypted data
-     * @param  string      $oldKey     The key the data was encrypted before
-     * @param  string      $newKey     The key for re-encrypting the data
-     * @throws PortusError
-     * @return string      Returns the re-encrypted data
+     * @param  string       $cipherText The encrypted data
+     * @param  string       $oldKey     The key the data was encrypted before
+     * @param  string       $newKey     The key for re-encrypting the data
+     * @throws KeyException
+     * @return string       Returns the re-encrypted data
      */
     public static function flip(string $cipherText, string $oldKey, string $newKey): string
     {
         if (!self::keyIsValid($oldKey)) {
-            throw PortusError::invalidKey();
+            throw KeyException::invalidKey();
         }
 
         if (!self::keyIsValid($newKey)) {
-            throw PortusError::invalidKey();
+            throw KeyException::invalidKey();
         }
 
         try {
             $plainText = self::decrypt($cipherText, $oldKey);
-        } catch (PortusError $e) {
-            throw new PortusError(sprintf('Decryption failed: %s.', $e->getMessage()), $e);
+        } catch (DecryptionException $e) {
+            throw new KeyException(sprintf('Decryption failed: %s.', $e->getMessage()), $e);
         }
 
         try {
             return self::encrypt($plainText, $newKey);
-        } catch (PortusError $e) {
-            throw new PortusError(sprintf('Encryption failed: %s.', $e->getMessage()), $e);
+        } catch (EncryptionException $e) {
+            throw new KeyException(sprintf('Encryption failed: %s.', $e->getMessage()), $e);
         }
     }
 
     /**
-     * Check if the provided encryption key is valid. Does not match the key against anything, just basically checks its length.
+     * Check if the provided encryption key is valid
      * @param  string $key the key to be validated
      * @return bool   Returns true if the key is valid, false otherwise
      */
@@ -300,8 +304,8 @@ class Colloportus
     {
         try {
             $key = Base64::decode($key);
-        } catch (PortusError $e) {
-            throw new PortusError(sprintf('Failed to decode key: %s.', $e->getMessage()), $e);
+        } catch (Base64Exception $e) {
+            return false;
         }
 
         return mb_strlen($key, '8bit') === self::KEY_SIZE;
