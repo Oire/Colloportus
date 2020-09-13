@@ -1,15 +1,17 @@
 <?php
-namespace Oire\Tests;
+namespace Oire\Colloportus\Tests;
 
-use Oire\Base64;
-use Oire\Colloportus;
+use Oire\Base64\Base64;
+use Oire\Colloportus\Colloportus;
 use PHPUnit\Framework\TestCase;
 
 class ColloportusTest extends TestCase
 {
     private const CORRECT_PASSWORD = '4024Alohomora02*X%cZ/R&D';
     private const WRONG_PASSWORD = '4024Alohomora02*X%cZ/r&d';
+    // Oirë-Base64-encoded result of `hex2bin('000102030405060708090a0b0c0d0e0f')`
     private const KNOWN_KEY = 'AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8';
+    // Oirë-Base64-encoded result of `hex2bin('0f0e0d0c0b0a09080706050403020100')`
     private const NEW_KEY = 'Hx4dHBsaGRgXFhUUExIREA8ODQwLCgkIBwYFBAMCAQA';
     private const DECRYPTABLE_DATA = 'Mischief managed!';
 
@@ -65,7 +67,7 @@ class ColloportusTest extends TestCase
         self::assertSame(self::DECRYPTABLE_DATA, Colloportus::decrypt($encrypted, self::KNOWN_KEY));
     }
 
-    public function testEncryptAndDecryptWithRandomStorableKey(): void
+    public function testEncryptAndDecryptWithRandomKey(): void
     {
         $randomKey = Colloportus::createKey();
         $encrypted = Colloportus::encrypt(self::DECRYPTABLE_DATA, $randomKey);

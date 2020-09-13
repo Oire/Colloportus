@@ -9,8 +9,8 @@
         }
     ],
     "require": {
-        "php": ">=7.1.2",
-        "oire/base64": "^1"
+        "php": ">=7.3",
+        "oire/base64": "^2"
     },
     "require-dev": {
         "friendsofphp/php-cs-fixer": "^2.16",
@@ -32,12 +32,12 @@
     },
     "autoload": {
         "psr-4": {
-            "Oire\\": "src"
+            "Oire\\Colloportus\\": "src"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "Oire\\Tests\\": "tests"
+            "Oire\\Colloportus\\Tests\\": "tests"
         }
     },
     "config": {
