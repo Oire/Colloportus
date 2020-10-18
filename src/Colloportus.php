@@ -37,8 +37,9 @@ use Oire\Colloportus\Exception\PasswordException;
 
 class Colloportus
 {
-    private const HASH_FUNCTION = 'sha384';
-    private const ENCRYPTION_ALGORITHM = 'aes-256-ctr';
+    public const HASH_FUNCTION = 'sha384';
+    public const ENCRYPTION_ALGORITHM = 'aes-256-ctr';
+
     private const KEY_SIZE = 32;
     private const SALT_SIZE = 32;
     private const IV_SIZE = 16;
