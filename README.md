@@ -1,6 +1,7 @@
 # Oirë Colloportus, a Password Hashing and Encryption Library
 
-[![Build Status](https://api.travis-ci.com/Oire/Colloportus.svg?branch=master)](https://travis-ci.com/github/Oire/Colloportus)
+[![Latest Version on Packagist](https://img.shields.io/packagist/v/Oire/Colloportus.svg?style=flat-square)](https://packagist.org/packages/Oire/Colloportus)
+[![GitHub Tests Action Status](https://img.shields.io/github/workflow/status/Oire/Colloportus/run-tests?label=tests)](https://github.com/Oire/Colloportus/actions?query=workflow%3Arun-tests+branch%3Amaster)
 [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/Oire/Colloportus/blob/master/LICENSE)
 
 Welcome to Colloportus, a password hashing and data encryption library!  
