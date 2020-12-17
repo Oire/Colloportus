@@ -8,16 +8,16 @@
     "packages": [
         {
             "name": "oire/base64",
-            "version": "v2.0",
+            "version": "v2.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/Oire/Base64.git",
-                "reference": "bc48512b6f665a1fd5289f83c7294d5204ac5591"
+                "reference": "6deace332102fb335f8c9a534ae48175a0030afe"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/Oire/Base64/zipball/bc48512b6f665a1fd5289f83c7294d5204ac5591",
-                "reference": "bc48512b6f665a1fd5289f83c7294d5204ac5591",
+                "url": "https://api.github.com/repos/Oire/Base64/zipball/6deace332102fb335f8c9a534ae48175a0030afe",
+                "reference": "6deace332102fb335f8c9a534ae48175a0030afe",
                 "shasum": ""
             },
             "require": {
@@ -47,7 +47,7 @@
                 }
             ],
             "description": "Url-and filename-safe Base64 handling.",
-            "time": "2020-09-08T18:19:03+00:00"
+            "time": "2020-12-16T18:09:47+00:00"
         }
     ],
     "packages-dev": [
@@ -607,12 +607,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/Oire/php-code-style.git",
-                "reference": "25a95778655dcab3f0e5a3fece17ddfb6dd49dfb"
+                "reference": "38694cecee760b0d93d8ebb6facae8fc2cc57f86"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/Oire/php-code-style/zipball/25a95778655dcab3f0e5a3fece17ddfb6dd49dfb",
-                "reference": "25a95778655dcab3f0e5a3fece17ddfb6dd49dfb",
+                "url": "https://api.github.com/repos/Oire/php-code-style/zipball/38694cecee760b0d93d8ebb6facae8fc2cc57f86",
+                "reference": "38694cecee760b0d93d8ebb6facae8fc2cc57f86",
                 "shasum": ""
             },
             "require": {
@@ -641,7 +641,7 @@
                 "issues": "https://github.com/Oire/php-code-style/issues",
                 "source": "https://github.com/Oire/php-code-style"
             },
-            "time": "2020-12-08T23:58:32+00:00"
+            "time": "2020-12-13T13:13:53+00:00"
         },
         {
             "name": "phar-io/manifest",
