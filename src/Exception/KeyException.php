@@ -27,10 +27,10 @@ namespace Oire\Colloportus\Exception;
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  *  SOFTWARE.
  */
-class KeyException extends ColloportusException
+final class KeyException extends ColloportusException
 {
     public static function invalidKey(): self
     {
-        return new static('Invalid key given.');
+        return new self('Invalid key given.');
     }
 }

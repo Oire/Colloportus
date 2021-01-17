@@ -32,22 +32,22 @@ use Throwable;
  */
 class ColloportusException extends RuntimeException
 {
-    public function __construct(string $message, ?Throwable $previous)
+    final public function __construct(string $message, ?Throwable $previous = null)
     {
         parent::__construct($message, 0, $previous);
     }
 
-    public static function hmacFailed(): self
+    final public static function hmacFailed(): self
     {
         return new static('Failed to compute HMAC.');
     }
 
-    public static function authenticationKeyFailed(): self
+    final public static function authenticationKeyFailed(): self
     {
         return new static('Failed to derive authentication key.');
     }
 
-    public static function encryptionKeyFailed(): self
+    final public static function encryptionKeyFailed(): self
     {
         return new static('Failed to derive encryption key.');
     }

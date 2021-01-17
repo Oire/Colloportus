@@ -49,7 +49,7 @@ class ColloportusTest extends TestCase
     {
         $randomKey = Colloportus::createKey();
         $newKey = Colloportus::createKey();
-        $hash = Colloportus::lock(self::CORRECT_PASSWORD, $randomKey, false);
+        $hash = Colloportus::lock(self::CORRECT_PASSWORD, $randomKey);
 
         self::assertTrue(Colloportus::check(self::CORRECT_PASSWORD, $hash, $randomKey));
 

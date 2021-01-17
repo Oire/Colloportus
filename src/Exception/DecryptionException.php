@@ -27,6 +27,6 @@ namespace Oire\Colloportus\Exception;
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  *  SOFTWARE.
  */
-class DecryptionException extends ColloportusException
+final class DecryptionException extends ColloportusException
 {
 }
