@@ -31,6 +31,6 @@ final class KeyException extends ColloportusException
 {
     public static function invalidKey(): self
     {
-        return new static('Invalid key given.');
+        return new self('Invalid key given.');
     }
 }
