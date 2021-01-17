@@ -235,6 +235,7 @@ class Colloportus
             throw KeyException::invalidKey();
         }
 
+        /** @var string|false */
         $hash = password_hash(Base64::encode(hash(self::HASH_FUNCTION, $password, true)), PASSWORD_DEFAULT);
 
         if ($hash === false) {
