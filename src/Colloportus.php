@@ -84,14 +84,12 @@ class Colloportus
         }
 
         $salt = random_bytes(self::SALT_SIZE);
-        /** @var string|false */
         $authenticationKey = hash_hkdf(self::HASH_FUNCTION, $key, 0, self::AUTHENTICATION_INFO, $salt);
 
         if ($authenticationKey === false) {
             throw EncryptionException::authenticationKeyFailed();
         }
 
-        /** @var string|false */
         $encryptionKey = hash_hkdf(self::HASH_FUNCTION, $key, 0, self::ENCRYPTION_INFO, $salt);
 
         if ($encryptionKey === false) {
@@ -106,7 +104,6 @@ class Colloportus
         }
 
         $cipherText = $salt . $iv . $encrypted;
-        /** @var string|false */
         $hmac       = hash_hmac(self::HASH_FUNCTION, $cipherText, $authenticationKey, true);
 
         if ($hmac === false) {
@@ -154,49 +151,42 @@ class Colloportus
             throw new DecryptionException('Given cipher text is of incorrect length.');
         }
 
-        /** @var string|false */
         $salt = mb_substr($cipherText, 0, self::SALT_SIZE, '8bit');
 
         if ($salt === false) {
             throw new DecryptionException('Invalid salt given.');
         }
 
-        /** @var string|false */
         $iv = mb_substr($cipherText, self::SALT_SIZE, self::IV_SIZE, '8bit');
 
         if ($iv === false) {
             throw new DecryptionException('Invalid initialization vector given.');
         }
 
-        /** @var string|false */
         $hmac = mb_substr($cipherText, -48, null, '8bit');
 
         if ($hmac === false) {
             throw DecryptionException::hmacFailed();
         }
 
-        /** @var string|false */
         $encrypted = mb_substr($cipherText, self::SALT_SIZE + self::IV_SIZE, mb_strlen($cipherText, '8bit') - 48 - self::SALT_SIZE - self::IV_SIZE, '8bit');
 
         if ($encrypted === false) {
             throw new DecryptionException('Invalid encrypted text given.');
         }
 
-        /** @var string|false */
         $authenticationKey = hash_hkdf(self::HASH_FUNCTION, $key, 0, self::AUTHENTICATION_INFO, $salt);
 
         if ($authenticationKey === false) {
             throw DecryptionException::authenticationKeyFailed();
         }
 
-        /** @var string|false */
         $encryptionKey = hash_hkdf(self::HASH_FUNCTION, $key, 0, self::ENCRYPTION_INFO, $salt);
 
         if ($encryptionKey === false) {
             throw DecryptionException::encryptionKeyFailed();
         }
 
-        /** @var string|false */
         $message = hash_hmac(self::HASH_FUNCTION, $salt . $iv . $encrypted, $authenticationKey, true);
 
         if ($message === false) {
@@ -207,7 +197,6 @@ class Colloportus
             throw new DecryptionException('Integrity check failed.');
         }
 
-        /** @var string|false */
         $plainText = openssl_decrypt($encrypted, self::ENCRYPTION_ALGORITHM, $encryptionKey, OPENSSL_RAW_DATA, $iv);
 
         if ($plainText === false) {
@@ -228,17 +217,16 @@ class Colloportus
     public static function lock(string $password, string $key): string
     {
         if (empty($password)) {
-            return '';
+            throw new PasswordException('Password cannot be empty.');
         }
 
         if (!self::keyIsValid($key)) {
             throw KeyException::invalidKey();
         }
 
-        /** @var string|false */
         $hash = password_hash(Base64::encode(hash(self::HASH_FUNCTION, $password, true)), PASSWORD_DEFAULT);
 
-        if ($hash === false) {
+        if ($hash === false || $hash === null) {
             throw new PasswordException('Failed to hash the password.');
         }
 

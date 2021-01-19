@@ -1,4 +1,4 @@
-name: PHPStan Analyze
+name: Psalm Analyze
 
 on: [push, pull_request]
 
@@ -17,15 +17,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Setup PHP
-        uses: shivammathur/setup-php@v2
+      - name: Run Psalm
+        uses: docker://vimeo/psalm-github-actions
         with:
-          php-version: ${{ matrix.php }}
-          extensions: mbstring, pdo, sqlite, pdo_sqlite
-          coverage: none
-
-      - name: Install dependencies
-        run: composer install
-
-      - name: Run PHPStan
-        run: vendor/bin/phpstan analyse
+          composer_require_dev: true
