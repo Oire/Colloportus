@@ -8,16 +8,16 @@
     "packages": [
         {
             "name": "oire/base64",
-            "version": "v2.2",
+            "version": "v2.2.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/Oire/Base64.git",
-                "reference": "709ac4d0b40c26e46fe01abbb83c803394880d2d"
+                "reference": "d0453cfada4f5fd9e1424e5eb3b9329bdf9f08c4"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/Oire/Base64/zipball/709ac4d0b40c26e46fe01abbb83c803394880d2d",
-                "reference": "709ac4d0b40c26e46fe01abbb83c803394880d2d",
+                "url": "https://api.github.com/repos/Oire/Base64/zipball/d0453cfada4f5fd9e1424e5eb3b9329bdf9f08c4",
+                "reference": "d0453cfada4f5fd9e1424e5eb3b9329bdf9f08c4",
                 "shasum": ""
             },
             "require": {
@@ -54,7 +54,7 @@
                 "issues": "https://github.com/Oire/Base64/issues",
                 "source": "https://github.com/Oire/Base64"
             },
-            "time": "2021-01-17T14:18:48+00:00"
+            "time": "2021-01-17T23:32:16+00:00"
         }
     ],
     "packages-dev": [
