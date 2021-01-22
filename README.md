@@ -133,5 +133,5 @@ All contributions are welcome. Please fork, make a feature branch, hack on the c
 
 ## License
 
-Copyright © 2017-2020, Andre Polykanine also known as Menelion Elensúlë, [The Magical Kingdom of Oirë](https://github.com/Oire/).  
+Copyright © 2017-2021, Andre Polykanine also known as Menelion Elensúlë, [The Magical Kingdom of Oirë](https://github.com/Oire/).  
 This software is licensed under an MIT license.
