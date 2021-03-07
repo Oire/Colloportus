@@ -1,5 +1,9 @@
 # Oirë Colloportus, a Password Hashing and Encryption Library
 
+## Note! This library is not maintained anymore.
+
+Please use [Iridium security library](https://github.com/Oire/Iridium-php) instead.
+
 [![Latest Version on Packagist](https://img.shields.io/packagist/v/Oire/Colloportus.svg?style=flat-square)](https://packagist.org/packages/Oire/Colloportus)
 [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/Oire/Colloportus/blob/master/LICENSE)
 
